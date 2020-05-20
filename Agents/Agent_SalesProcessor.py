@@ -9,18 +9,19 @@ Asume que el agente de registro esta en el puerto 9000
 """
 
 from multiprocessing import Process, Queue
-import socket
 import argparse
+import socket
+import sys
 
 from flask import Flask, request
-from rdflib import Namespace, Graph, Literal
+from rdflib import Namespace, Graph, Literal, XSD, BNode
 from rdflib.namespace import FOAF, RDF
 
 from AgentUtil.ACLMessages import build_message, send_message, get_message_properties
 from AgentUtil.Agent import Agent
 from AgentUtil.FlaskServer import shutdown_server
 from AgentUtil.Logging import config_logger
-from AgentUtil.OntoNamespaces import ACL, DSO
+from AgentUtil.OntoNamespaces import ACL, DSO, OntoECSDI # falta afegir ontologia
 
 __author__ = 'javier'
 
@@ -162,14 +163,55 @@ def comunicacion():
             if 'content' in msgdic:
                 content = msgdic['content']
                 accion = gm.value(subject=content, predicate=RDF.type)
+                
+                # Search products action
+                if accion == OntoECSDI.Buscar_productos:
+                    searchFilters = gm.objects(content, OntoECSDI.Filtro_busqueda)
+                    searchFilters_dict = {}
+                    for filter in searchFilters:
+                        if gm.value(subject=filter, predicate=RDF.type) == OntoECSDI.Filtrar_nombre:
+                            name = gm.value(subject=filter, predicate=OntoECSDI.Nombre)
+                            logger.info('Nombre: ' + name)
+                            searchFilters_dict['name'] = name
+                        elif gm.value(subject=filter, predicate=RDF.type) == OntoECSDI.Filtrar_marca:
+                            brand = gm.value(subject=filter, predicate=OntoECSDI.Marca)
+                            logger.info('Marca: ' + brand)
+                            searchFilters_dict['brand'] = brand
+                        elif gm.value(subject=filter, predicate=RDF.type) == OntoECSDI.Filtrar_tipo:
+                            prod_type = gm.value(subject=filter, predicate=OntoECSDI.Tipo)
+                            logger.info('Tipo: ' + prod_type)
+                            searchFilters_dict['prod_type'] = prod_type
+                        elif gm.value(subject=filter, predicate=RDF.type) == OntoECSDI.Filtrar_precio:
+                            min_price = gm.value(subject=filter, predicate=OntoECSDI.Precio_minimo)
+                            max_price = gm.value(subject=filter, predicate=OntoECSDI.Precio_maximo)
+                            if min_price:
+                                logger.info('Precio minimo: ' + min_price)
+                                searchFilters_dict['min_price'] = min_price.toPython()
+                            if max_price:
+                                logger.info('Precio maximo: ' + max_price)
+                                searchFilters_dict['max_price'] = max_price.toPython()
+                        elif gm.value(subject=filter, predicate=RDF.type) == OntoECSDI.Filtrar_vendedores_externos:
+                            external_prod = gm.value(subject=filter, predicate=OntoECSDI.Incluir_productos_externos)
+                            internal_prod = gm.value(subject=filter, predicate=OntoECSDI.Incluir_productos_tienda)
+                            if external_prod and external_prod == False:
+                                logger.info('Se incluyen productos externos')
+                                searchFilters_dict['exclude_external_prod'] = True
+                            if internal_prod and internal_prod == False:
+                                logger.info('Se incluyen productos internos')
+                                searchFilters_dict['exclude_internal_prod'] = True
+
+                    gr = searchProducts(**searchFilters_dict)
+                
+                # Buy products action
+                # Code should be added here
 
             # Aqui realizariamos lo que pide la accion
             # Por ahora simplemente retornamos un Inform-done
-            gr = build_message(Graph(),
-                ACL['inform-done'],
-                sender=SalesProcessorAgent.uri,
-                msgcnt=mss_cnt,
-                receiver=msgdic['sender'], )
+            #gr = build_message(Graph(),
+            #    ACL['inform-done'],
+            #    sender=SalesProcessorAgent.uri,
+            #    msgcnt=mss_cnt,
+            #    receiver=msgdic['sender'], )
     mss_cnt += 1
 
     logger.info('Respondemos a la peticion')
@@ -203,6 +245,87 @@ def agentbehavior1(cola):
     """
     #Registramos el agente
     gr = register_message()
+
+def searchProducts(name=None, brand=None, prod_type=None, min_price=0.0, max_price=sys.float_info.max, exclude_external_prod=None, exclude_internal_prod=None):
+    graph = Graph()
+    ontologyFile = open('../data/productes')
+    graph.parse(ontologyFile, format='turtle')
+
+    first_filter = first_prod_class = 0
+    query = """
+        prefix rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        prefix xsd:<http://www.w3.org/2001/XMLSchema#>
+        prefix default:<http://www.owl-ontologies.com/ECSDIAmazon.owl#>
+        prefix owl:<http://www.w3.org/2002/07/owl#>
+        SELECT DISTINCT ?producto ?nombre ?marca ?tipo ?precio ?peso
+        where {
+        """
+
+    if exclude_external_prod is None:
+        query += """{ ?producto rdf:type default:Producto_exteno }"""
+        first_prod_class = 1
+    if exclude_internal_prod is None:
+        if first_prod_class == 1:
+            query += """ UNION """
+        query += """{ ?producto rdf:type default:Producto_interno }"""
+
+    query += """ .
+            ?producto default:Nombre ?nombre .
+            ?producto default:Marca ?marca .
+            ?producto default:Tipo ?tipo .
+            ?producto default:Precio ?precio .
+            ?producto default:Peso ?peso .
+            FILTER("""
+
+    if name is not None:
+        query += """str(?nombre) = '""" + name + """'"""
+        first_filter = 1
+
+    if brand is not None:
+        if first_filter == 1:
+            query += """ && """
+        else:
+            first_filter = 1
+        query += """str(?marca) = '""" + brand + """'"""
+
+    if prod_type is not None:
+        if first_filter == 1:
+            query += """ && """
+        else:
+            first_filter = 1
+        query += """str(?tipo) = '""" + prod_type + """'"""
+    
+    if first_filter == 1:
+        query += """ && """
+    query += """?precio >= """ + str(min_price) + """ &&
+                ?precio <= """ + str(max_price) + """  )}
+                order by asc(UCASE(str(?nombre)))"""
+    
+    graph_query = graph.query(query)
+    result = Graph()
+    result.bind('OntoECSDI', OntoECSDI)
+
+    productos_encontrados = BNode()
+    result.add((productos_encontrados, RDF.type, OntoECSDI.Productos_encontrados))
+
+    product_count = 0
+    for row in graph_query:
+        name = row.nombre
+        brand = row.marca
+        prod_type = row.tipo
+        price = row.precio
+        weight = row.peso
+        logger.debug(name, brand, prod_type, price)
+        subject = row.producto
+        product_count += 1
+        result.add((subject, RDF.type, OntoECSDI.Producto))
+        result.add((subject, OntoECSDI.Nombre, Literal(name, datatype=XSD.string)))
+        result.add((subject, OntoECSDI.Marca, Literal(brand, datatype=XSD.string)))
+        result.add((subject, OntoECSDI.Tipo, Literal(prod_type, datatype=XSD.string)))
+        result.add((subject, OntoECSDI.Precio, Literal(price, datatype=XSD.float)))
+        result.add((subject, OntoECSDI.Peso, Literal(weight, datatype=XSD.float)))
+        result.add((productos_encontrados, OntoECSDI.Contiene_producto, subject))
+    return result
 
 
 if __name__ == '__main__':
