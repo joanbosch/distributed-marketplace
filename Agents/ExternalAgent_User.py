@@ -17,7 +17,7 @@ from rdflib import Graph, Namespace
 from rdflib.namespace import FOAF, RDF
 import requests
 
-from AgentUtil.OntoNamespaces import ACL, DSO
+from AgentUtil.OntoNamespaces import ACL, DSO, ECSDI
 from AgentUtil.FlaskServer import shutdown_server
 from AgentUtil.ACLMessages import build_message, send_message
 from AgentUtil.Agent import Agent
@@ -71,6 +71,9 @@ mss_cnt = 0
 
 # Productos encontrados
 products_list = []
+
+# Productos seleccionados
+products_selected = []
 
 # Datos del Agente
 ExternalUserAgent = Agent('ExternalUserAgent',
@@ -153,32 +156,63 @@ def browser_uhome():
     return render_template('uhome.html')
 
 # Interface for user to search products and select them to buy them.
-# 2 cases:
+# 3 cases:
 #   1. First time on this endpoint, shows inputs to restrict the search, method GET
 #   2. User Hit the search button and shows a list of products, method POST
+#   3. user hit the buy button and shows the list of selected products and confirmed sale, method POST
 @app.route("/search", methods=['GET', 'POST'])
 def browser_search():
+    global mss_cnt
     global products_list
+    products_list = [ 
+        {
+            "nombre": "iphone 11",
+            "marca": "apple",
+            "tipo": "tecnologia",
+            "precio": 860,
+            "peso": 200
+        },
+        {
+            "nombre": "iphone 11",
+            "marca": "apple",
+            "tipo": "tecnologia",
+            "precio": 860,
+            "peso": 200
+        },
+        {
+            "nombre": "iphoneX",
+            "marca": "apple",
+            "tipo": "tecnologia",
+            "precio": 860,
+            "peso": 200
+        }
+    ]
     if request.method == 'GET':
         return render_template('search.html', products=None)
     elif request.method == 'POST':
-        # send message to SalesProcessor to search products
-        return render_template('search.html', products=products_list)
+        # ------------------------- BUSQUEDA --------------------------------
+        if request.form['submit'] == 'search':
+            return render_template('search.html', products=products_list)
+        # -------------------------- COMPRA --------------------------------
+        elif request.form['submit'] == 'buy':
+            logger.info("Enviando peticion de compra.")
+            global products_selected
+            products_selected = []
+            for index_item in request.form.getlist("checkbox"):
+                item_checked = []
+                item = products_list[int(index_item)]
+                item_checked.append(item['nombre'])
+                item_checked.append(item['marca'])
+                item_checked.append(item['tipo'])
+                item_checked.append(item['precio'])
+                item_checked.append(item['peso'])
+                products_selected.append(item)
 
-# Interface to show the producst selected to buy to the user. 
-# 2 cases:
-#   1. User on search page hit Buy button, shows list of products to confirm sale, method GET
-#   2. User hit Confirm Buy and shows the receipt
-@app.route("/buy", methods=['GET', 'POST'])
-def browser_buy():
-    if request.method == 'GET':
-        return render_template('buy.html', products=products_list)
-    elif request.method == 'POST':
-        # send message to SalesProcessor to search products
-        return render_template('buy.html', products=products_list, saleCompleted='true')
+            return render_template('buy.html', products=products_selected)
 
 @app.route("/return", methods=['GET', 'POST'])
 def browser_return():
+    global mss_cnt
     if request.method == 'GET':
         sales_list = []
         return render_template('return.html', sales=sales_list)

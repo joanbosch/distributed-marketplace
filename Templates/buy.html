@@ -4,16 +4,35 @@
     <title>Comprar Productos</title>
 </head>
 <body>
+    <h2>Compra realizada exitosamente! :)</h2>
 
+    <div>
+        <a href="{{url_for('browser_search')}}"> Volver Buscar Productos </a>
+    </div>
+    <div>
+        <a href="{{url_for('browser_uhome')}}"> Volver Menu </a>
+    </div>
+    <br>
 
-
-
-<div>
-    <a href="{{url_for('browser_search')}}"> Volver Buscar Productos </a>
-</div>
-<div>
-    <a href="{{url_for('browser_uhome')}}"> Volver Menu </a>
-</div>
+    <table>
+        <caption>Productos comprados: </caption>
+        <tr>
+            <th id="columna"><strong>NOMBRE</strong></th>
+            <th id="columna"><strong>MARCA</strong></th>
+            <th id="columna"><strong>TIPO</strong></th>
+            <th id="columna"><strong>PRECIO</strong></th>
+            <th id="columna"><strong>PESO</strong></th>
+        </tr>
+        {% for prod in products %}
+        <tr>
+            <td>{{ prod.nombre }}</td>
+            <td>{{ prod.marca }}</td>
+            <td>{{ prod.tipo }}</td>
+            <td>{{ prod.precio }} $</td>
+            <td>{{ prod.peso }} gr</td>
+        </tr>
+        {% endfor %}
+    </table>
 
 </body>
 </html>
