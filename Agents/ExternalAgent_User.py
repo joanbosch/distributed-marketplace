@@ -12,9 +12,9 @@ from multiprocessing import Process
 import socket
 import argparse
 
-from flask import Flask, render_template, request
-from rdflib import Graph, Namespace
-from rdflib.namespace import FOAF, RDF
+from flask import Flask, render_template, request, redirect
+from rdflib import Graph, Literal, Namespace, URIRef
+from rdflib.namespace import FOAF, RDF, XSD
 import requests
 
 from AgentUtil.OntoNamespaces import ACL, DSO, ECSDI
@@ -156,10 +156,9 @@ def browser_uhome():
     return render_template('uhome.html')
 
 # Interface for user to search products and select them to buy them.
-# 3 cases:
+# 2 cases:
 #   1. First time on this endpoint, shows inputs to restrict the search, method GET
 #   2. User Hit the search button and shows a list of products, method POST
-#   3. user hit the buy button and shows the list of selected products and confirmed sale, method POST
 @app.route("/search", methods=['GET', 'POST'])
 def browser_search():
     global mss_cnt
@@ -192,23 +191,120 @@ def browser_search():
     elif request.method == 'POST':
         # ------------------------- BUSQUEDA --------------------------------
         if request.form['submit'] == 'search':
+            logger.info("Enviando peticion de busqueda.")
+
+            # content of message
+            content = ECSDI['Buscar_productos_' + str(mss_cnt)] 
+
+            # Graph creation
+            gr = Graph()
+            gr.add((content, RDF.type, ECSDI.Buscar_productos))
+
+            # Add filters
+            name = request.form['name']
+            if name:
+                subject_nombre = ECSDI['Filtrar_nombre'+ mss_cnt]
+                gr.add((subject_nombre, RDF.type, ECSDI.Filtrar_nombre))
+                gr.add((subject_nombre, ECSDI.Nombre, Literal(name, datatype=XSD.string)))
+                gr.add((content, ECSDI.Usa_filtro, URIRef(subject_nombre)))
+
+            marca = request.form['brand']
+            if marca:
+                subject_marca = ECSDI['Filtrar_marca'+ mss_cnt]
+                gr.add((subject_marca, RDF.type, ECSDI.Filtrar_marca))
+                gr.add((subject_marca, ECSDI.Marca, Literal(marca, datatype=XSD.string)))
+                gr.add((content, ECSDI.Usa_filtro, URIRef(subject_marca)))
+
+            precio_min = request.form['price_min']
+            precio_max = request.form['price_max']
+            if precio_min or precio_max:
+                subject_precio = ECSDI['Filtrar_precio'+ mss_cnt]
+                gr.add((subject_precio, RDF.type, ECSDI.Filtrar_precio))
+                if precio_min:
+                    gr.add((subject_precio, ECSDI.Precio_minimo, Literal(precio_min, datatype=XSD.float)))
+                if precio_max:
+                    gr.add((subject_precio, ECSDI.Precio_maximo, Literal(precio_max, datatype=XSD.float)))
+                gr.add((content, ECSDI.Usa_filtro, URIRef(subject_precio)))
+
+            tipo = request.form['type']
+            if tipo:
+                subject_tipo = ECSDI['Filtrar_tipo'+ mss_cnt]
+                gr.add((subject_tipo, RDF.type, ECSDI.Filtrar_tipo))
+                gr.add((subject_tipo, ECSDI.Tipo, Literal(tipo, datatype=XSD.string)))
+                gr.add((content, ECSDI.Usa_filtro, URIRef(subject_tipo)))
+            
+            vend_externo = request.form['externalSeller']
+            vend_tienda = request.form['internalSeller']
+            if vend_externo or vend_tienda:
+                subject_vend_ext = ECSDI['Filtrar_vendedores_externos'+ mss_cnt]
+                gr.add((subject_vend_ext, RDF.type, ECSDI.Filtrar_vendedores_externos))
+                if vend_externo:
+                    gr.add((subject_vend_ext, ECSDI.Incluir_productos_externos, Literal(vend_externo, datatype=XSD.boolean)))
+                if vend_tienda:
+                    gr.add((subject_vend_ext, ECSDI.Incluir_productos_tienda, Literal(vend_tienda, datatype=XSD.boolean)))
+                gr.add((content, ECSDI.Usa_filtro, URIRef(subject_vend_ext)))
+            
+
+            # Buscar a l'agent Processar Compra i demanar buscar productes, assignar els productes a la products_list
+
             return render_template('search.html', products=products_list)
         # -------------------------- COMPRA --------------------------------
         elif request.form['submit'] == 'buy':
-            logger.info("Enviando peticion de compra.")
+            logger.info("Redireccionando a pagina para comprar.")
             global products_selected
             products_selected = []
             for index_item in request.form.getlist("checkbox"):
                 item_checked = []
                 item = products_list[int(index_item)]
-                item_checked.append(item['nombre'])
+                item_checked.append(item['url'])
                 item_checked.append(item['marca'])
-                item_checked.append(item['tipo'])
-                item_checked.append(item['precio'])
+                item_checked.append(item['nombre'])
                 item_checked.append(item['peso'])
+                item_checked.append(item['precio'])
+                item_checked.append(item['tipo'])
                 products_selected.append(item)
+            
+            return redirect('http://%s:%d/buy' % (hostname, port))
 
-            return render_template('buy.html', products=products_selected)
+# Interface to show the producst selected to buy to the user. 
+# 2 cases:
+#   1. User on search page hit Buy button, shows list of products to complete and confirm sale, method GET
+#   2. User hit Confirm Buy and shows the receipt, method POST
+@app.route("/buy", methods=['GET', 'POST'])
+def browser_buy():
+    if request.method == 'GET':
+        return render_template('buy.html', products=products_selected, saleCompleted=None)
+    elif request.method == 'POST':
+        logger.info("Enviando peticion de compra.")
+        
+        # Content of message
+        content = ECSDI['Procesar_Compra_'+mss_cnt]
+
+        gr = Graph()
+        gr.add((content, RDF.type, ECSDI.Procesar_Compra))
+
+        priority = request.form['priority']
+        gr.add((content, ECSDI.Prioridad_Entrega, Literal(priority, datatype=XSD.string)))
+
+        address = request.form['address']
+        gr.add((content, ECSDI.Direccion_Envio, Literal(address, datatype=XSD.string)))
+
+        creditcard = request.form['creditcard']
+        gr.add((content, ECSDI.Informacion_Pago, Literal(creditcard, datatype=XSD.string)))
+
+        for prod in products_selected:
+            subject_product = prod[0]
+            gr.add((subject_product, RDF.type, ECSDI.Producto))
+            gr.add((subject_product, ECSDI.Marca, Literal(prod[1], datatype=XSD.string)))
+            gr.add((subject_product, ECSDI.Nombre, Literal(prod[2], datatype=XSD.string)))
+            gr.add((subject_product, ECSDI.Peso, Literal(prod[3], datatype=XSD.integer)))
+            gr.add((subject_product, ECSDI.Precio, Literal(prod[4], datatype=XSD.float)))
+            gr.add((subject_product, ECSDI.Tipo, Literal(prod[5], datatype=XSD.string)))
+            gr.add((content, ECSDI.Lista_Productos_ProcesarCompra, URIRef(subject_product)))
+
+        # buscar agente Procesar Compra y enviarle mensaje
+
+        return render_template('buy.html', products=products_list, saleCompleted=True)
 
 @app.route("/return", methods=['GET', 'POST'])
 def browser_return():
@@ -253,23 +349,6 @@ def agentbehavior1():
     Un comportamiento del agente
     :return:
     
-
-    # Buscamos en el directorio un agente SalesProcessor
-    gr = get_agent_info(DSO.SalesProcessor)
-
-    # Obtenemos la direccion del agente de la respuesta
-    msg = gr.value(predicate=RDF.type, object=ACL.FipaAclMessage)
-    content = gr.value(subject=msg, predicate=ACL.content)
-    ragn_addr = gr.value(subject=content, predicate=DSO.Address)
-    ragn_uri = gr.value(subject=content, predicate=DSO.Uri)
-
-    # Ahora mandamos un objeto de tipo request mandando una accion de tipo Search
-    # que esta en una supuesta ontologia de acciones de agentes
-    send_message_to_agent(ragn_addr, ragn_uri)
-
-    # r = requests.get(ra_stop)
-    # print r.text
-
     # Selfdestruct
     requests.get(ExternalUserAgent.stop)
     """

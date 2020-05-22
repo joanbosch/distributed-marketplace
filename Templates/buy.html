@@ -4,7 +4,11 @@
     <title>Comprar Productos</title>
 </head>
 <body>
-    <h2>Compra realizada exitosamente! :)</h2>
+    {% if saleCompleted %}
+        <h2> Compra realizada exitosamente! :)</h2>
+    {% else %}
+        <h2> Completa y confirma la compra </h2>
+    {% endif %}
 
     <div>
         <a href="{{url_for('browser_search')}}"> Volver Buscar Productos </a>
@@ -15,7 +19,12 @@
     <br>
 
     <table>
-        <caption>Productos comprados: </caption>
+        {% if saleCompleted %}
+            <caption>Productos comprados: </caption>
+        {% else %}
+            <caption>Productos seleccionados: </caption>
+        {% endif %}
+        
         <tr>
             <th id="columna"><strong>NOMBRE</strong></th>
             <th id="columna"><strong>MARCA</strong></th>
@@ -28,11 +37,31 @@
             <td>{{ prod.nombre }}</td>
             <td>{{ prod.marca }}</td>
             <td>{{ prod.tipo }}</td>
-            <td>{{ prod.precio }} $</td>
-            <td>{{ prod.peso }} gr</td>
+            <td>{{ prod.precio }} €</td>
+            <td>{{ prod.peso }} g</td>
         </tr>
         {% endfor %}
     </table>
+    <br>
+    {% if not saleCompleted %}
+        <form method="POST">
+            <label>Ciudad de envio</label>
+            <input type="text" name="address" required>
+            <br>
+            <label>Tarjeta de credito</label>
+            <input type="text" name="creditcard" required>
+            <br>
+            <label> Prioridad </label>
+            <input type="radio" name="priority" value="maxima">
+            <label>Maxima</label>
+            <input type="radio" name="priority" value="normal" checked>
+            <label>Normal</label>
+            <br>
+            <br>
+            <button type="submit" name="submit"> Confirmar Compra </button>
+        
+        </form>
+    {% endif %}
 
 </body>
 </html>
