@@ -21,7 +21,7 @@ from AgentUtil.ACLMessages import build_message, send_message, get_message_prope
 from AgentUtil.Agent import Agent
 from AgentUtil.FlaskServer import shutdown_server
 from AgentUtil.Logging import config_logger
-from AgentUtil.OntoNamespaces import ACL, DSO, OntoECSDI # falta afegir ontologia
+from AgentUtil.OntoNamespaces import ACL, DSO, ECSDI # falta afegir ontologia
 
 __author__ = 'javier'
 
@@ -165,34 +165,34 @@ def comunicacion():
                 accion = gm.value(subject=content, predicate=RDF.type)
                 
                 # Search products action
-                if accion == OntoECSDI.Buscar_productos:
-                    searchFilters = gm.objects(content, OntoECSDI.Filtro_busqueda)
+                if accion == ECSDI.Buscar_productos:
+                    searchFilters = gm.objects(content, ECSDI.Filtro_busqueda)
                     searchFilters_dict = {}
                     for filter in searchFilters:
-                        if gm.value(subject=filter, predicate=RDF.type) == OntoECSDI.Filtrar_nombre:
-                            name = gm.value(subject=filter, predicate=OntoECSDI.Nombre)
+                        if gm.value(subject=filter, predicate=RDF.type) == ECSDI.Filtrar_nombre:
+                            name = gm.value(subject=filter, predicate=ECSDI.Nombre)
                             logger.info('Nombre: ' + name)
                             searchFilters_dict['name'] = name
-                        elif gm.value(subject=filter, predicate=RDF.type) == OntoECSDI.Filtrar_marca:
-                            brand = gm.value(subject=filter, predicate=OntoECSDI.Marca)
+                        elif gm.value(subject=filter, predicate=RDF.type) == ECSDI.Filtrar_marca:
+                            brand = gm.value(subject=filter, predicate=ECSDI.Marca)
                             logger.info('Marca: ' + brand)
                             searchFilters_dict['brand'] = brand
-                        elif gm.value(subject=filter, predicate=RDF.type) == OntoECSDI.Filtrar_tipo:
-                            prod_type = gm.value(subject=filter, predicate=OntoECSDI.Tipo)
+                        elif gm.value(subject=filter, predicate=RDF.type) == ECSDI.Filtrar_tipo:
+                            prod_type = gm.value(subject=filter, predicate=ECSDI.Tipo)
                             logger.info('Tipo: ' + prod_type)
                             searchFilters_dict['prod_type'] = prod_type
-                        elif gm.value(subject=filter, predicate=RDF.type) == OntoECSDI.Filtrar_precio:
-                            min_price = gm.value(subject=filter, predicate=OntoECSDI.Precio_minimo)
-                            max_price = gm.value(subject=filter, predicate=OntoECSDI.Precio_maximo)
+                        elif gm.value(subject=filter, predicate=RDF.type) == ECSDI.Filtrar_precio:
+                            min_price = gm.value(subject=filter, predicate=ECSDI.Precio_minimo)
+                            max_price = gm.value(subject=filter, predicate=ECSDI.Precio_maximo)
                             if min_price:
                                 logger.info('Precio minimo: ' + min_price)
                                 searchFilters_dict['min_price'] = min_price.toPython()
                             if max_price:
                                 logger.info('Precio maximo: ' + max_price)
                                 searchFilters_dict['max_price'] = max_price.toPython()
-                        elif gm.value(subject=filter, predicate=RDF.type) == OntoECSDI.Filtrar_vendedores_externos:
-                            external_prod = gm.value(subject=filter, predicate=OntoECSDI.Incluir_productos_externos)
-                            internal_prod = gm.value(subject=filter, predicate=OntoECSDI.Incluir_productos_tienda)
+                        elif gm.value(subject=filter, predicate=RDF.type) == ECSDI.Filtrar_vendedores_externos:
+                            external_prod = gm.value(subject=filter, predicate=ECSDI.Incluir_productos_externos)
+                            internal_prod = gm.value(subject=filter, predicate=ECSDI.Incluir_productos_tienda)
                             if external_prod and external_prod == False:
                                 logger.info('Se incluyen productos externos')
                                 searchFilters_dict['exclude_external_prod'] = True
@@ -200,7 +200,11 @@ def comunicacion():
                                 logger.info('Se incluyen productos internos')
                                 searchFilters_dict['exclude_internal_prod'] = True
 
-                    gr = searchProducts(**searchFilters_dict)
+                    gr = build_message(searchProducts(**searchFilters_dict),
+                        ACL['inform-done'],
+                        sender=SalesProcessorAgent.uri,
+                        msgcnt=mss_cnt,
+                        receiver=msgdic['sender'])
                 
                 # Buy products action
                 # Code should be added here
@@ -248,7 +252,7 @@ def agentbehavior1(cola):
 
 def searchProducts(name=None, brand=None, prod_type=None, min_price=0.0, max_price=sys.float_info.max, exclude_external_prod=None, exclude_internal_prod=None):
     graph = Graph()
-    ontologyFile = open('../data/productes')
+    ontologyFile = open('../data/productes') # Posar lloc on estigui el registre de productes
     graph.parse(ontologyFile, format='turtle')
 
     first_filter = first_prod_class = 0
@@ -303,10 +307,10 @@ def searchProducts(name=None, brand=None, prod_type=None, min_price=0.0, max_pri
     
     graph_query = graph.query(query)
     result = Graph()
-    result.bind('OntoECSDI', OntoECSDI)
+    result.bind('ECSDI', ECSDI)
 
     productos_encontrados = BNode()
-    result.add((productos_encontrados, RDF.type, OntoECSDI.Productos_encontrados))
+    result.add((productos_encontrados, RDF.type, ECSDI.Productos_encontrados))
 
     product_count = 0
     for row in graph_query:
@@ -318,13 +322,13 @@ def searchProducts(name=None, brand=None, prod_type=None, min_price=0.0, max_pri
         logger.debug(name, brand, prod_type, price)
         subject = row.producto
         product_count += 1
-        result.add((subject, RDF.type, OntoECSDI.Producto))
-        result.add((subject, OntoECSDI.Nombre, Literal(name, datatype=XSD.string)))
-        result.add((subject, OntoECSDI.Marca, Literal(brand, datatype=XSD.string)))
-        result.add((subject, OntoECSDI.Tipo, Literal(prod_type, datatype=XSD.string)))
-        result.add((subject, OntoECSDI.Precio, Literal(price, datatype=XSD.float)))
-        result.add((subject, OntoECSDI.Peso, Literal(weight, datatype=XSD.float)))
-        result.add((productos_encontrados, OntoECSDI.Contiene_producto, subject))
+        result.add((subject, RDF.type, ECSDI.Producto))
+        result.add((subject, ECSDI.Nombre, Literal(name, datatype=XSD.string)))
+        result.add((subject, ECSDI.Marca, Literal(brand, datatype=XSD.string)))
+        result.add((subject, ECSDI.Tipo, Literal(prod_type, datatype=XSD.string)))
+        result.add((subject, ECSDI.Precio, Literal(price, datatype=XSD.float)))
+        result.add((subject, ECSDI.Peso, Literal(weight, datatype=XSD.float)))
+        result.add((productos_encontrados, ECSDI.Contiene_producto, subject))
     return result
 
 
