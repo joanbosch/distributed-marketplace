@@ -17,7 +17,7 @@ from rdflib import Graph, Literal, Namespace, URIRef
 from rdflib.namespace import FOAF, RDF, XSD
 import requests
 
-from AgentUtil.OntoNamespaces import ACL, DSO, ECSDI
+from AgentUtil.OntoNamespaces import ACL, DSO#, ECSDI
 from AgentUtil.FlaskServer import shutdown_server
 from AgentUtil.ACLMessages import build_message, send_message
 from AgentUtil.Agent import Agent
@@ -75,6 +75,9 @@ products_list = []
 # Productos seleccionados
 products_selected = []
 
+# Numero de productos seleccionados para comprar
+numProdCarrito = 0
+
 # Datos del Agente
 ExternalUserAgent = Agent('ExternalUserAgent',
                        agn.ExternalUserAgent,
@@ -95,8 +98,6 @@ def get_agent_info(type):
     """
     Busca en el servicio de registro mandando un
     mensaje de request con una accion Search del servicio de directorio
-    Podria ser mas adecuado mandar un query-ref y una descripcion de registo
-    con variables
     :param type:
     :return:
     """
@@ -123,28 +124,19 @@ def get_agent_info(type):
     return gr
 
 
-def send_message_to_agent(addr, ragn_uri):
+def send_message_to_agent(gmess, ragn, contentRes):
     """
     Envia una accion a un agente de informacion
     """
     global mss_cnt
     logger.info('Hacemos una peticion al servicio de informacion')
 
-    gmess = Graph()
-
-    # Supuesta ontologia de acciones de agentes de informacion
-    IAA = Namespace('IAActions')
-
-    gmess.bind('foaf', FOAF)
-    gmess.bind('iaa', IAA)
-    reg_obj = agn[ExternalUserAgent.name + '-info-search']
-    gmess.add((reg_obj, RDF.type, IAA.Search))
-
     msg = build_message(gmess, perf=ACL.request,
                         sender=ExternalUserAgent.uri,
-                        receiver=ragn_uri,
-                        msgcnt=mss_cnt)
-    gr = send_message(msg, addr)
+                        receiver=ragn.uri,
+                        msgcnt=mss_cnt,
+                        content=contentRes)
+    gr = send_message(msg, ragn.address)
     mss_cnt += 1
     logger.info('Recibimos respuesta a la peticion al servicio de informacion')
 
@@ -163,6 +155,7 @@ def browser_uhome():
 def browser_search():
     global mss_cnt
     global products_list
+    global numProdCarrito
     products_list = [ 
         {
             "nombre": "iphone 11",
@@ -172,7 +165,7 @@ def browser_search():
             "peso": 200
         },
         {
-            "nombre": "iphone 11",
+            "nombre": "iphone 8",
             "marca": "apple",
             "tipo": "tecnologia",
             "precio": 860,
@@ -187,12 +180,12 @@ def browser_search():
         }
     ]
     if request.method == 'GET':
-        return render_template('search.html', products=None)
+        return render_template('search.html', products=None, numCarrito=numProdCarrito)
     elif request.method == 'POST':
         # ------------------------- BUSQUEDA --------------------------------
         if request.form['submit'] == 'search':
             logger.info("Enviando peticion de busqueda.")
-
+            """
             # content of message
             content = ECSDI['Buscar_productos_' + str(mss_cnt)] 
 
@@ -246,25 +239,61 @@ def browser_search():
             
 
             # Buscar a l'agent Processar Compra i demanar buscar productes, assignar els productes a la products_list
-
-            return render_template('search.html', products=products_list)
-        # -------------------------- COMPRA --------------------------------
-        elif request.form['submit'] == 'buy':
-            logger.info("Redireccionando a pagina para comprar.")
-            global products_selected
-            products_selected = []
-            for index_item in request.form.getlist("checkbox"):
-                item_checked = []
-                item = products_list[int(index_item)]
-                item_checked.append(item['url'])
-                item_checked.append(item['marca'])
-                item_checked.append(item['nombre'])
-                item_checked.append(item['peso'])
-                item_checked.append(item['precio'])
-                item_checked.append(item['tipo'])
-                products_selected.append(item)
             
+            venedor = get_agent_info(agn.AgenteSimple, DirectoryAgent, ExternalUserAgent)
+
+            ProductsGr = send_message_to_agent(gr, venedor, content)
+
+            index = 0
+            subject_pos = {}
+            products_list = []
+            for s, p, o in ProductsGr:
+                if s not in subject_pos:
+                    subject_pos[s] = index
+                    products_list.append({})
+                    index += 1
+                if s in subject_pos:
+                    subject_dict = products_list[subject_pos[s]]
+                    if p == RDF.type:
+                        subject_dict['url'] = s
+                    elif p == ECSDI.Marca:
+                        subject_dict['marca'] = o
+                    elif p == ECSDI.Nombre:
+                        subject_dict['nombre'] = o
+                    elif p == ECSDI.Peso:
+                        subject_dict['peso'] = o
+                    elif p == ECSDI.Precio:
+                        subject_dict['precio'] = o
+                    elif p == ECSDI.Tipo:
+                        subject_dict['tipo'] = o
+                    products_list[subject_pos[s]] = subject_dict
+            """
+            return render_template('search.html', products=products_list, numCarrito=numProdCarrito)
+
+        # -------------------------- COMPRA --------------------------------
+
+        elif request.form['submit'] == 'buy':            
             return redirect('http://%s:%d/buy' % (hostname, port))
+
+        else:
+            logger.info("Añadir producto al carrito de compra.")
+
+            global products_selected
+
+            index_item = request.form['submit']
+            item_checked = []
+            item = products_list[int(index_item)]
+            #item_checked.append(item['url'])
+            item_checked.append(item['marca'])
+            item_checked.append(item['nombre'])
+            item_checked.append(item['peso'])
+            item_checked.append(item['precio'])
+            item_checked.append(item['tipo'])
+            products_selected.append(item)
+
+            numProdCarrito += 1
+            
+            return render_template('search.html', products=products_list, numCarrito=numProdCarrito)
 
 # Interface to show the producst selected to buy to the user. 
 # 2 cases:
@@ -272,39 +301,56 @@ def browser_search():
 #   2. User hit Confirm Buy and shows the receipt, method POST
 @app.route("/buy", methods=['GET', 'POST'])
 def browser_buy():
+    global products_selected
+    global numProdCarrito
+
     if request.method == 'GET':
         return render_template('buy.html', products=products_selected, saleCompleted=None)
     elif request.method == 'POST':
-        logger.info("Enviando peticion de compra.")
-        
-        # Content of message
-        content = ECSDI['Procesar_Compra_'+mss_cnt]
+        if request.form['submit'] == 'buy':
+            logger.info("Enviando peticion de compra.")
+            """
+            # Content of message
+            content = ECSDI['Procesar_Compra_'+mss_cnt]
 
-        gr = Graph()
-        gr.add((content, RDF.type, ECSDI.Procesar_Compra))
+            gr = Graph()
+            gr.add((content, RDF.type, ECSDI.Procesar_Compra))
 
-        priority = request.form['priority']
-        gr.add((content, ECSDI.Prioridad_Entrega, Literal(priority, datatype=XSD.string)))
+            priority = request.form['priority']
+            gr.add((content, ECSDI.Prioridad_Entrega, Literal(priority, datatype=XSD.string)))
 
-        address = request.form['address']
-        gr.add((content, ECSDI.Direccion_Envio, Literal(address, datatype=XSD.string)))
+            address = request.form['address']
+            gr.add((content, ECSDI.Direccion_Envio, Literal(address, datatype=XSD.string)))
 
-        creditcard = request.form['creditcard']
-        gr.add((content, ECSDI.Informacion_Pago, Literal(creditcard, datatype=XSD.string)))
+            creditcard = request.form['creditcard']
+            gr.add((content, ECSDI.Informacion_Pago, Literal(creditcard, datatype=XSD.string)))
 
-        for prod in products_selected:
-            subject_product = prod[0]
-            gr.add((subject_product, RDF.type, ECSDI.Producto))
-            gr.add((subject_product, ECSDI.Marca, Literal(prod[1], datatype=XSD.string)))
-            gr.add((subject_product, ECSDI.Nombre, Literal(prod[2], datatype=XSD.string)))
-            gr.add((subject_product, ECSDI.Peso, Literal(prod[3], datatype=XSD.integer)))
-            gr.add((subject_product, ECSDI.Precio, Literal(prod[4], datatype=XSD.float)))
-            gr.add((subject_product, ECSDI.Tipo, Literal(prod[5], datatype=XSD.string)))
-            gr.add((content, ECSDI.Lista_Productos_ProcesarCompra, URIRef(subject_product)))
+            for prod in products_selected:
+                subject_product = prod[0]
+                gr.add((subject_product, RDF.type, ECSDI.Producto))
+                gr.add((subject_product, ECSDI.Marca, Literal(prod[1], datatype=XSD.string)))
+                gr.add((subject_product, ECSDI.Nombre, Literal(prod[2], datatype=XSD.string)))
+                gr.add((subject_product, ECSDI.Peso, Literal(prod[3], datatype=XSD.integer)))
+                gr.add((subject_product, ECSDI.Precio, Literal(prod[4], datatype=XSD.float)))
+                gr.add((subject_product, ECSDI.Tipo, Literal(prod[5], datatype=XSD.string)))
+                gr.add((content, ECSDI.Lista_Productos_ProcesarCompra, URIRef(subject_product)))
 
-        # buscar agente Procesar Compra y enviarle mensaje
+            # buscar agente Procesar Compra y enviarle mensaje
+            
+            venedor = get_agent_info(agn.AgenteSimple, DirectoryAgent, ExternalUserAgent)
 
-        return render_template('buy.html', products=products_list, saleCompleted=True)
+            Respuesta = send_message_to_agent(gr, venedor, content)
+            """
+
+            return render_template('buy.html', products=products_selected, saleCompleted=True)
+        else:
+            logger.info("Eliminando producto del carrito de compra.")
+
+            index = request.form['submit']
+            del products_selected[int(index)]
+            numProdCarrito -= 1
+
+            return render_template('buy.html', products=products_selected, saleCompleted=None)
 
 @app.route("/return", methods=['GET', 'POST'])
 def browser_return():

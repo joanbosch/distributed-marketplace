@@ -37,32 +37,37 @@
     </form>
     <br>
     <!--Mostar lista de productos si productos no esta vacia-->
-    {% if products %}
-        <form method="POST">
-            <table>
-                <caption>Productos encontrados: </caption>
-                <tr>
-                    <th id="columna"><strong>NOMBRE</strong></th>
-                    <th id="columna"><strong>MARCA</strong></th>
-                    <th id="columna"><strong>TIPO</strong></th>
-                    <th id="columna"><strong>PRECIO</strong></th>
-                    <th id="columna"><strong>PESO</strong></th>
-                </tr>
-                {% for prod in products %}
-                <tr>
-                    <td>{{ prod.nombre }}</td>
-                    <td>{{ prod.marca }}</td>
-                    <td>{{ prod.tipo }}</td>
-                    <td>{{ prod.precio }} $</td>
-                    <td>{{ prod.peso }} gr</td>
-                    <td><input type="checkbox" name="checkbox" value="{{ products.index(prod) }}"></td>
-                </tr>
-                {% endfor %}
-            </table>
-            <button type="submit" name="submit" value="buy">Comprar</button>
-        </form>
-    {% endif %}
-     
+    
+    <form method="POST">
+        {% if products %}
+        <table>
+            <caption>Productos encontrados: </caption>
+            <tr>
+                <th id="columna"><strong>NOMBRE</strong></th>
+                <th id="columna"><strong>MARCA</strong></th>
+                <th id="columna"><strong>TIPO</strong></th>
+                <th id="columna"><strong>PRECIO</strong></th>
+                <th id="columna"><strong>PESO</strong></th>
+            </tr>
+            {% for prod in products %}
+            <tr>
+                <td>{{ prod.nombre }}</td>
+                <td>{{ prod.marca }}</td>
+                <td>{{ prod.tipo }}</td>
+                <td>{{ prod.precio }} $</td>
+                <td>{{ prod.peso }} gr</td>
+                <td><button type="submit" name="submit" value="{{ products.index(prod) }}">Añadir carrito compra</button></td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% endif %}
+        <p>Numero de productos en el carrito:  {{ numCarrito }}</p><br>
+        {% if products %}
+        <button type="submit" name="submit" value="buy">Comprar</button>
+        {% endif %}
+    </form>
+
+    
 
 </body>
 </html>

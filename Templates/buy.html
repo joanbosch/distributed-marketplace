@@ -18,11 +18,12 @@
     </div>
     <br>
 
-    <table>
+    <form method="POST">
+        <table>
         {% if saleCompleted %}
             <caption>Productos comprados: </caption>
         {% else %}
-            <caption>Productos seleccionados: </caption>
+            <caption>Carrito de compra: </caption>
         {% endif %}
         
         <tr>
@@ -33,15 +34,20 @@
             <th id="columna"><strong>PESO</strong></th>
         </tr>
         {% for prod in products %}
-        <tr>
-            <td>{{ prod.nombre }}</td>
-            <td>{{ prod.marca }}</td>
-            <td>{{ prod.tipo }}</td>
-            <td>{{ prod.precio }} €</td>
-            <td>{{ prod.peso }} g</td>
-        </tr>
+            <tr>
+                <td>{{ prod.nombre }}</td>
+                <td>{{ prod.marca }}</td>
+                <td>{{ prod.tipo }}</td>
+                <td>{{ prod.precio }} €</td>
+                <td>{{ prod.peso }} g</td>
+                {% if not saleCompleted %}
+                    <td><button type="submit" name="submit" value="{{ products.index(prod) }}">Eliminar</button></td>
+                {% endif %}
+            </tr>
         {% endfor %}
-    </table>
+        </table>
+    </form>
+    
     <br>
     {% if not saleCompleted %}
         <form method="POST">
@@ -58,7 +64,7 @@
             <label>Normal</label>
             <br>
             <br>
-            <button type="submit" name="submit"> Confirmar Compra </button>
+            <button type="submit" name="submit" value="buy"> Confirmar Compra </button>
         
         </form>
     {% endif %}
