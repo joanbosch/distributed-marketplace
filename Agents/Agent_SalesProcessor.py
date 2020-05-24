@@ -14,14 +14,14 @@ import socket
 import sys
 
 from flask import Flask, request
-from rdflib import Namespace, Graph, Literal, XSD, BNode
-from rdflib.namespace import FOAF, RDF
+from rdflib import Namespace, Graph, Literal, XSD
+from rdflib.namespace import FOAF, RDF, RDFS
 
 from AgentUtil.ACLMessages import build_message, send_message, get_message_properties
 from AgentUtil.Agent import Agent
 from AgentUtil.FlaskServer import shutdown_server
 from AgentUtil.Logging import config_logger
-from AgentUtil.OntoNamespaces import ACL, DSO, ECSDI # falta afegir ontologia
+from AgentUtil.OntoNamespaces import ACL, DSO, ECSDI
 
 __author__ = 'javier'
 
@@ -201,13 +201,30 @@ def comunicacion():
                                 searchFilters_dict['exclude_internal_prod'] = True
 
                     gr = build_message(searchProducts(**searchFilters_dict),
-                        ACL['inform-done'],
+                        ACL['inform-result'],
                         sender=SalesProcessorAgent.uri,
                         msgcnt=mss_cnt,
                         receiver=msgdic['sender'])
                 
                 # Buy products action
-                # Code should be added here
+                elif accion == ECSDI.Procesar_Compra:
+                    logger.info('Recibida peticion compra')
+                    gOrder = recordNewOrder(gm)
+                    logger.info('Asignamos envio a centro logistico')
+                    assignToLogisticCenter(gOrder)
+
+                    gr = build_message(Graph(),
+                        ACL['inform-done'],
+                        sender=SalesProcessorAgent.uri,
+                        msgcnt=mss_cnt,
+                        receiver=msgdic['sender'])
+
+                else:
+                    gr = build_message(Graph(),
+                        ACL['not-understood'],
+                        sender=SalesProcessorAgent.uri,
+                        msgcnt=mss_cnt,
+                        receiver=msgdic['sender'])
 
             # Aqui realizariamos lo que pide la accion
             # Por ahora simplemente retornamos un Inform-done
@@ -252,7 +269,7 @@ def agentbehavior1(cola):
 
 def searchProducts(name=None, brand=None, prod_type=None, min_price=0.0, max_price=sys.float_info.max, exclude_external_prod=None, exclude_internal_prod=None):
     graph = Graph()
-    ontologyFile = open('../data/productes') # Posar lloc on estigui el registre de productes
+    ontologyFile = open('../data/products') # Posar lloc on estigui el registre de productes
     graph.parse(ontologyFile, format='turtle')
 
     first_filter = first_prod_class = 0
@@ -309,7 +326,7 @@ def searchProducts(name=None, brand=None, prod_type=None, min_price=0.0, max_pri
     result = Graph()
     result.bind('ECSDI', ECSDI)
 
-    productos_encontrados = BNode()
+    productos_encontrados = ECSDI['productos_encontrados' + mss_cnt]
     result.add((productos_encontrados, RDF.type, ECSDI.Productos_encontrados))
 
     product_count = 0
@@ -327,9 +344,91 @@ def searchProducts(name=None, brand=None, prod_type=None, min_price=0.0, max_pri
         result.add((subject, ECSDI.Marca, Literal(brand, datatype=XSD.string)))
         result.add((subject, ECSDI.Tipo, Literal(prod_type, datatype=XSD.string)))
         result.add((subject, ECSDI.Precio, Literal(price, datatype=XSD.float)))
-        result.add((subject, ECSDI.Peso, Literal(weight, datatype=XSD.float)))
+        result.add((subject, ECSDI.Peso, Literal(weight, datatype=XSD.integer)))
         result.add((productos_encontrados, ECSDI.Contiene_producto, subject))
     return result
+
+def recordNewOrder(gm):
+    global mss_cnt
+
+    ordersFile = open('../data/orders')
+    ordersGraph = Graph()
+    ordersGraph.parse(ordersFile, format='turtle')
+
+    gNewOrder = Graph()
+    gNewOrder.bind('ECSDI', ECSDI)
+    order = ECSDI['pedido' + mss_cnt]
+    # There is only one order in a 'Procesar_Compra' message, 'for' only will do one loop
+    for neworder in gm.subjects(RDF.type, ECSDI.Procesar_Compra):
+        city = gm.value(subject=neworder, predicate=ECSDI.Direccion_Envio)
+        priority = gm.value(subject=neworder, predicate=ECSDI.Prioridad_Entrega)
+        gNewOrder.add((order, RDF.type, ECSDI.Pedido))
+        gNewOrder.add((order, ECSDI.Ciudad_Destino, Literal(city, datatype=XSD.string)))
+        gNewOrder.add((order, ECSDI.Prioridad_Entrega, Literal(priority, datatype=XSD.string)))
+    
+    for product in gm.subjects(RDF.type, ECSDI.Producto):
+        name = gm.value(subject=product, predicate=ECSDI.Nombre)
+        brand = gm.value(subject=product, predicate=ECSDI.Marca)
+        prod_type = gm.value(subject=product, predicate=ECSDI.Tipo)
+        price = gm.value(subject=product, predicate=ECSDI.Precio)
+        weight = gm.value(subject=product, predicate=ECSDI.Peso)
+        gNewOrder.add((product, RDF.type, ECSDI.Producto))
+        gNewOrder.add((product, ECSDI.Nombre, Literal(name, datatype=XSD.string)))
+        gNewOrder.add((product, ECSDI.Marca, Literal(brand, datatype=XSD.string)))
+        gNewOrder.add((product, ECSDI.Tipo, Literal(prod_type, datatype=XSD.string)))
+        gNewOrder.add((product, ECSDI.Precio, Literal(price, datatype=XSD.float)))
+        gNewOrder.add((product, ECSDI.Peso, Literal(weight, datatype=XSD.integer)))
+        gNewOrder.add((order, ECSDI.Productos_Pedido, product))
+    
+    for s, p, o in gNewOrder:
+        ordersGraph.add((s, p, o))
+    
+    ordersGraph.serialize(destination='../data/orders', format='turtle')
+
+    return gNewOrder
+
+def assignToLogisticCenter(gr):
+    global mss_cnt
+
+    content = ECSDI['enviar_pedido' + mss_cnt]
+    gr.add((content, RDF.type, ECSDI.Enviar_Pedido))
+
+    # There is only one order. To find it, first we obtain a list with this order (subjectsFound) and later we find the order inside the list.
+    subjectsFound = gr.subjects(predicate=RDF.type, object=ECSDI.Pedido)
+    for s in subjectsFound:
+        order = s
+        
+    gr.add((content, ECSDI.Pedido_A_Enviar, order))
+
+    logistic = get_agent_info(agn.LogisticCenterAgent, DirectoryAgent, SalesProcessorAgent, mss_cnt)
+
+    gr = send_message(
+        build_message(gr, perf=ACL.request, sender=SalesProcessorAgent.uri, receiver=logistic.uri, msgcnt=mss_cnt, content=content),
+        logistic.address
+    )
+
+def get_agent_info(type_, directory_agent, sender, msgcnt):
+    gmess = Graph()
+    # Construimos el mensaje de registro
+    gmess.bind('foaf', FOAF)
+    gmess.bind('dso', DSO)
+    ask_obj = agn[sender.name + '-Search']
+
+    gmess.add((ask_obj, RDF.type, DSO.Search))
+    gmess.add((ask_obj, DSO.AgentType, type_))
+    gr = send_message(
+        build_message(gmess, perf=ACL.request, sender=sender.uri, receiver=directory_agent.uri, msgcnt=msgcnt,
+                      content=ask_obj),
+        directory_agent.address
+    )
+    dic = get_message_properties(gr)
+    content = dic['content']
+
+    address = gr.value(subject=content, predicate=DSO.Address)
+    url = gr.value(subject=content, predicate=DSO.Uri)
+    name = gr.value(subject=content, predicate=FOAF.name)
+
+    return Agent(name, url, address, None)
 
 
 if __name__ == '__main__':
