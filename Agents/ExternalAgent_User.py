@@ -17,7 +17,7 @@ from rdflib import Graph, Literal, Namespace, URIRef
 from rdflib.namespace import FOAF, RDF, XSD
 import requests
 
-from AgentUtil.OntoNamespaces import ACL, DSO#, ECSDI
+from AgentUtil.OntoNamespaces import ACL, DSO, ECSDI
 from AgentUtil.FlaskServer import shutdown_server
 from AgentUtil.ACLMessages import build_message, send_message
 from AgentUtil.Agent import Agent
@@ -185,7 +185,7 @@ def browser_search():
         # ------------------------- BUSQUEDA --------------------------------
         if request.form['submit'] == 'search':
             logger.info("Enviando peticion de busqueda.")
-            """
+
             # content of message
             content = ECSDI['Buscar_productos_' + str(mss_cnt)] 
 
@@ -239,7 +239,6 @@ def browser_search():
             
 
             # Buscar a l'agent Processar Compra i demanar buscar productes, assignar els productes a la products_list
-            
             venedor = get_agent_info(agn.AgenteSimple, DirectoryAgent, ExternalUserAgent)
 
             ProductsGr = send_message_to_agent(gr, venedor, content)
@@ -267,7 +266,7 @@ def browser_search():
                     elif p == ECSDI.Tipo:
                         subject_dict['tipo'] = o
                     products_list[subject_pos[s]] = subject_dict
-            """
+            
             return render_template('search.html', products=products_list, numCarrito=numProdCarrito)
 
         # -------------------------- COMPRA --------------------------------
@@ -283,7 +282,7 @@ def browser_search():
             index_item = request.form['submit']
             item_checked = []
             item = products_list[int(index_item)]
-            #item_checked.append(item['url'])
+            item_checked.append(item['url'])
             item_checked.append(item['marca'])
             item_checked.append(item['nombre'])
             item_checked.append(item['peso'])
@@ -309,7 +308,7 @@ def browser_buy():
     elif request.method == 'POST':
         if request.form['submit'] == 'buy':
             logger.info("Enviando peticion de compra.")
-            """
+            
             # Content of message
             content = ECSDI['Procesar_Compra_'+mss_cnt]
 
@@ -340,8 +339,7 @@ def browser_buy():
             venedor = get_agent_info(agn.AgenteSimple, DirectoryAgent, ExternalUserAgent)
 
             Respuesta = send_message_to_agent(gr, venedor, content)
-            """
-
+            
             return render_template('buy.html', products=products_selected, saleCompleted=True)
         else:
             logger.info("Eliminando producto del carrito de compra.")
@@ -356,12 +354,20 @@ def browser_buy():
 def browser_return():
     global mss_cnt
     if request.method == 'GET':
-        sales_list = []
-        return render_template('return.html', sales=sales_list)
+        logger.info("Conseguimos y mostramos el historial de compra.")
+
+        products_comprados = []
+        # Contactar agente para conseguir el historial de compra.
+        gr = Graph()
+
+        return render_template('return.html', products=products_comprados, returnCompleted=None)
+
     elif request.method == 'POST':
-        # send message to SalesProcessor to search products
-        products_sale = []
-        return render_template('return.html', products=products_sale)
+        logger.info("Enviando peticion de devolucion.")
+
+        products_returned = []
+        
+        return render_template('return.html', products=products_returned, returnCompleted=True)
 
 
 @app.route("/Stop")
