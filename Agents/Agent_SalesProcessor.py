@@ -112,7 +112,7 @@ def register_message():
     gmess.add((reg_obj, DSO.Uri, SalesProcessorAgent.uri))
     gmess.add((reg_obj, FOAF.name, Literal(SalesProcessorAgent.name)))
     gmess.add((reg_obj, DSO.Address, Literal(SalesProcessorAgent.address)))
-    gmess.add((reg_obj, DSO.AgentType, DSO.HotelsAgent))
+    gmess.add((reg_obj, DSO.AgentType, ECSDI.Procesador_Compras)) # Això s'hauria de revisar. Si deixem el tipus a ECSDI.Procesador_Compras caldria afegir-ho a la ontologia.
 
     # Lo metemos en un envoltorio FIPA-ACL y lo enviamos
     gr = send_message(
@@ -193,11 +193,11 @@ def comunicacion():
                         elif gm.value(subject=filter, predicate=RDF.type) == ECSDI.Filtrar_vendedores_externos:
                             external_prod = gm.value(subject=filter, predicate=ECSDI.Incluir_productos_externos)
                             internal_prod = gm.value(subject=filter, predicate=ECSDI.Incluir_productos_tienda)
-                            if external_prod and external_prod == False:
-                                logger.info('Se incluyen productos externos')
+                            if external_prod and external_prod == False: # potser al == cal afegir .toPython()
+                                logger.info('No se incluyen productos externos')
                                 searchFilters_dict['exclude_external_prod'] = True
-                            if internal_prod and internal_prod == False:
-                                logger.info('Se incluyen productos internos')
+                            if internal_prod and internal_prod == False: # potser al == cal afegir .toPython()
+                                logger.info('No se incluyen productos internos')
                                 searchFilters_dict['exclude_internal_prod'] = True
 
                     gr = build_message(searchProducts(**searchFilters_dict),
@@ -269,33 +269,33 @@ def agentbehavior1(cola):
 
 def searchProducts(name=None, brand=None, prod_type=None, min_price=0.0, max_price=sys.float_info.max, exclude_external_prod=None, exclude_internal_prod=None):
     graph = Graph()
-    ontologyFile = open('../data/products') # Posar lloc on estigui el registre de productes
+    ontologyFile = open('../Data/products')
     graph.parse(ontologyFile, format='turtle')
 
     first_filter = first_prod_class = 0
     query = """
         prefix rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>
         prefix xsd:<http://www.w3.org/2001/XMLSchema#>
-        prefix default:<http://www.owl-ontologies.com/ECSDIAmazon.owl#>
+        prefix ecsdi:<http://www.semanticweb.org/joan/ontologies/2020/3/practicaECSDI#>
         prefix owl:<http://www.w3.org/2002/07/owl#>
         SELECT DISTINCT ?producto ?nombre ?marca ?tipo ?precio ?peso
         where {
         """
 
     if exclude_external_prod is None:
-        query += """{ ?producto rdf:type default:Producto_exteno }"""
+        query += """{ ?producto rdf:type ecsdi:Producto_exteno }"""
         first_prod_class = 1
     if exclude_internal_prod is None:
         if first_prod_class == 1:
             query += """ UNION """
-        query += """{ ?producto rdf:type default:Producto_interno }"""
+        query += """{ ?producto rdf:type ecsdi:Producto_interno }"""
 
     query += """ .
-            ?producto default:Nombre ?nombre .
-            ?producto default:Marca ?marca .
-            ?producto default:Tipo ?tipo .
-            ?producto default:Precio ?precio .
-            ?producto default:Peso ?peso .
+            ?producto ecsdi:Nombre ?nombre .
+            ?producto ecsdi:Marca ?marca .
+            ?producto ecsdi:Tipo ?tipo .
+            ?producto ecsdi:Precio ?precio .
+            ?producto ecsdi:Peso ?peso .
             FILTER("""
 
     if name is not None:
@@ -351,7 +351,7 @@ def searchProducts(name=None, brand=None, prod_type=None, min_price=0.0, max_pri
 def recordNewOrder(gm):
     global mss_cnt
 
-    ordersFile = open('../data/orders')
+    ordersFile = open('../Data/orders')
     ordersGraph = Graph()
     ordersGraph.parse(ordersFile, format='turtle')
 
@@ -400,7 +400,7 @@ def assignToLogisticCenter(gr):
         
     gr.add((content, ECSDI.Pedido_A_Enviar, order))
 
-    logistic = get_agent_info(agn.LogisticCenterAgent, DirectoryAgent, SalesProcessorAgent, mss_cnt)
+    logistic = get_agent_info(ECSDI.Centro_Logistico, DirectoryAgent, SalesProcessorAgent, mss_cnt)
 
     gr = send_message(
         build_message(gr, perf=ACL.request, sender=SalesProcessorAgent.uri, receiver=logistic.uri, msgcnt=mss_cnt, content=content),
