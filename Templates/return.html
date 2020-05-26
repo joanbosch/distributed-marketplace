@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Devolver Producto</title>
+</head>
+<body>
+
+    {% if returnCompleted %}
+        <h2>Productos devueltos exitosamente!</h2>
+    {% else %}
+        <h2>Selecciona los productos a devolver.</h2>
+    {% endif %}
+
+    <div>
+        <a href="{{url_for('browser_uhome')}}"> Volver Menu</a>
+    </div>
+    <br>
+
+    <form method="POST">
+        <table>
+            {% if returnCompleted %}
+                Productos devueltos:
+            {% else %}
+                Productos comprados:
+            {% endif %}
+
+            <tr>
+                <th id="columna"><strong>NOMBRE</strong></th>
+                <th id="columna"><strong>MARCA</strong></th>
+                <th id="columna"><strong>TIPO</strong></th>
+                <th id="columna"><strong>PRECIO</strong></th>
+                <th id="columna"><strong>PESO</strong></th>
+            </tr>
+            <tr>
+            {% for prod in products %}
+                <tr>
+                    <td>{{ prod.nombre }}</td>
+                    <td>{{ prod.marca }}</td>
+                    <td>{{ prod.tipo }}</td>
+                    <td>{{ prod.precio }} €</td>
+                    <td>{{ prod.peso }} g</td>
+                    {% if not saleCompleted %}
+                        <td><input type="checkbox" name="checkbox" value="{{ products.index(prod) }}"></td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        </table>
+        {% if not returnCompleted %}
+            <button type="submit" name="submit" value="return">Devolver</button>
+        {% endif %}
+    </form>
+
+</body>
+</html>

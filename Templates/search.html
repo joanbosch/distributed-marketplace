@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Buscar Productos</title>
+</head>
+<body>
+    <h1>Buscar Productos</h1>
+
+    <div>
+        <a href="{{url_for('browser_uhome')}}"> Volver Menu</a>
+    </div>
+    <br>
+
+    <form method="POST">
+        <label>Nombre</label>
+        <input type="text" name="name">
+        <br>
+        <label>Marca</label>
+        <input type="text" name="brand">
+        <br>
+        <label>Precio minimo</label>
+        <input type="number" name="price_min" min="0" step="0.01">
+        <br>
+        <label>Precio maximo</label>
+        <input type="number" name="price_max" min="0" step="0.01">
+        <br>
+        <label>Tipo</label>
+        <input type="text" name="type">
+        <br>
+        <input type="checkbox" name="externalSeller">
+        <label>Incluir productos externos</label>
+        <br>
+        <input type="checkbox" name="internalSeller" checked>
+        <label>Incluir productos de la tienda</label>
+        <br>
+        <button type="submit" name="submit" value="search">Buscar</button>
+    </form>
+    <br>
+    <!--Mostar lista de productos si productos no esta vacia-->
+    
+    <form method="POST">
+        {% if products %}
+        <table>
+            <caption>Productos encontrados: </caption>
+            <tr>
+                <th id="columna"><strong>NOMBRE</strong></th>
+                <th id="columna"><strong>MARCA</strong></th>
+                <th id="columna"><strong>TIPO</strong></th>
+                <th id="columna"><strong>PRECIO</strong></th>
+                <th id="columna"><strong>PESO</strong></th>
+            </tr>
+            {% for prod in products %}
+            <tr>
+                <td>{{ prod.nombre }}</td>
+                <td>{{ prod.marca }}</td>
+                <td>{{ prod.tipo }}</td>
+                <td>{{ prod.precio }} $</td>
+                <td>{{ prod.peso }} gr</td>
+                <td><button type="submit" name="submit" value="{{ products.index(prod) }}">Añadir carrito compra</button></td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% endif %}
+        <p>Numero de productos en el carrito:  {{ numCarrito }}</p><br>
+        {% if products %}
+        <button type="submit" name="submit" value="buy">Comprar</button>
+        {% endif %}
+    </form>
+
+    
+
+</body>
+</html>

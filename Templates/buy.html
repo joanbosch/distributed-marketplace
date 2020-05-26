@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Comprar Productos</title>
+</head>
+<body>
+    {% if saleCompleted %}
+        <h2> Compra realizada exitosamente! :)</h2>
+    {% else %}
+        <h2> Completa y confirma la compra </h2>
+    {% endif %}
+
+    <div>
+        <a href="{{url_for('browser_search')}}"> Volver Buscar Productos </a>
+    </div>
+    <div>
+        <a href="{{url_for('browser_uhome')}}"> Volver Menu </a>
+    </div>
+    <br>
+
+    <form method="POST">
+        <table>
+        {% if saleCompleted %}
+            Productos comprados:
+        {% else %}
+            Carrito de compra:
+        {% endif %}
+        
+        <tr>
+            <th id="columna"><strong>NOMBRE</strong></th>
+            <th id="columna"><strong>MARCA</strong></th>
+            <th id="columna"><strong>TIPO</strong></th>
+            <th id="columna"><strong>PRECIO</strong></th>
+            <th id="columna"><strong>PESO</strong></th>
+        </tr>
+        {% for prod in products %}
+            <tr>
+                <td>{{ prod.nombre }}</td>
+                <td>{{ prod.marca }}</td>
+                <td>{{ prod.tipo }}</td>
+                <td>{{ prod.precio }} €</td>
+                <td>{{ prod.peso }} g</td>
+                {% if not saleCompleted %}
+                    <td><button type="submit" name="submit" value="{{ products.index(prod) }}">Eliminar</button></td>
+                {% endif %}
+            </tr>
+        {% endfor %}
+        </table>
+    </form>
+    
+    <br>
+    {% if not saleCompleted %}
+        <form method="POST">
+            <label>Ciudad de envio</label>
+            <input type="text" name="address" required>
+            <br>
+            <label>Tarjeta de credito</label>
+            <input type="text" name="creditcard" required>
+            <br>
+            <label> Prioridad </label>
+            <input type="radio" name="priority" value="maxima">
+            <label>Maxima</label>
+            <input type="radio" name="priority" value="normal" checked>
+            <label>Normal</label>
+            <br>
+            <br>
+            <button type="submit" name="submit" value="buy"> Confirmar Compra </button>
+        
+        </form>
+    {% endif %}
+
+</body>
+</html>
