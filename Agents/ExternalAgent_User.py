@@ -162,7 +162,7 @@ def browser_search():
     global mss_cnt
     global products_list
     global numProdCarrito
-    products_list = []
+    global products_selected
     if request.method == 'GET':
         return render_template('search.html', products=None, numCarrito=numProdCarrito)
     elif request.method == 'POST':
@@ -180,7 +180,7 @@ def browser_search():
             # Add filters
             name = request.form['name']
             if name:
-                subject_nombre = ECSDI['Filtrar_nombre'+ mss_cnt]
+                subject_nombre = ECSDI['Filtrar_nombre'+ str(mss_cnt)]
                 gr.add((subject_nombre, RDF.type, ECSDI.Filtrar_nombre))
                 gr.add((subject_nombre, ECSDI.Nombre, Literal(name, datatype=XSD.string)))
                 gr.add((content, ECSDI.Usa_filtro, URIRef(subject_nombre)))
@@ -188,7 +188,7 @@ def browser_search():
 
             marca = request.form['brand']
             if marca:
-                subject_marca = ECSDI['Filtrar_marca'+ mss_cnt]
+                subject_marca = ECSDI['Filtrar_marca'+ str(mss_cnt)]
                 gr.add((subject_marca, RDF.type, ECSDI.Filtrar_marca))
                 gr.add((subject_marca, ECSDI.Marca, Literal(marca, datatype=XSD.string)))
                 gr.add((content, ECSDI.Usa_filtro, URIRef(subject_marca)))
@@ -198,7 +198,7 @@ def browser_search():
             precio_min = request.form['price_min']
             precio_max = request.form['price_max']
             if precio_min or precio_max:
-                subject_precio = ECSDI['Filtrar_precio'+ mss_cnt]
+                subject_precio = ECSDI['Filtrar_precio'+ str(mss_cnt)]
                 gr.add((subject_precio, RDF.type, ECSDI.Filtrar_precio))
                 if precio_min:
                     gr.add((subject_precio, ECSDI.Precio_minimo, Literal(precio_min, datatype=XSD.float)))
@@ -209,7 +209,7 @@ def browser_search():
 
             tipo = request.form['type']
             if tipo:
-                subject_tipo = ECSDI['Filtrar_tipo'+ mss_cnt]
+                subject_tipo = ECSDI['Filtrar_tipo'+ str(mss_cnt)]
                 gr.add((subject_tipo, RDF.type, ECSDI.Filtrar_tipo))
                 gr.add((subject_tipo, ECSDI.Tipo, Literal(tipo, datatype=XSD.string)))
                 gr.add((content, ECSDI.Usa_filtro, URIRef(subject_tipo)))
@@ -269,8 +269,6 @@ def browser_search():
         else:
             logger.info("Añadir producto al carrito de compra.")
 
-            global products_selected
-
             index_item = request.form['submit']
             item_checked = []
             item = products_list[int(index_item)]
@@ -302,7 +300,7 @@ def browser_buy():
             logger.info("Enviando peticion de compra.")
             
             # Content of message
-            content = ECSDI['Procesar_Compra_'+mss_cnt]
+            content = ECSDI['Procesar_Compra_' + str(mss_cnt)]
 
             gr = Graph()
             gr.add((content, RDF.type, ECSDI.Procesar_Compra))
@@ -317,13 +315,13 @@ def browser_buy():
             gr.add((content, ECSDI.Informacion_Pago, Literal(creditcard, datatype=XSD.string)))
 
             for prod in products_selected:
-                subject_product = prod[0]
+                subject_product = prod['url']
                 gr.add((subject_product, RDF.type, ECSDI.Producto))
-                gr.add((subject_product, ECSDI.Marca, Literal(prod[1], datatype=XSD.string)))
-                gr.add((subject_product, ECSDI.Nombre, Literal(prod[2], datatype=XSD.string)))
-                gr.add((subject_product, ECSDI.Peso, Literal(prod[3], datatype=XSD.integer)))
-                gr.add((subject_product, ECSDI.Precio, Literal(prod[4], datatype=XSD.float)))
-                gr.add((subject_product, ECSDI.Tipo, Literal(prod[5], datatype=XSD.string)))
+                gr.add((subject_product, ECSDI.Marca, Literal(prod['marca'], datatype=XSD.string)))
+                gr.add((subject_product, ECSDI.Nombre, Literal(prod['nombre'], datatype=XSD.string)))
+                gr.add((subject_product, ECSDI.Peso, Literal(prod['peso'], datatype=XSD.integer)))
+                gr.add((subject_product, ECSDI.Precio, Literal(prod['precio'], datatype=XSD.float)))
+                gr.add((subject_product, ECSDI.Tipo, Literal(prod['tipo'], datatype=XSD.string)))
                 gr.add((content, ECSDI.Lista_Productos_ProcesarCompra, URIRef(subject_product)))
 
             # buscar agente Procesar Compra y enviarle mensaje

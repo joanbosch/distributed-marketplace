@@ -6,9 +6,9 @@
 <body>
 
     {% if returnCompleted %}
-        <h2>Productos devueltos exitosamente!</h2>
+        <h2>Producto devuelto exitosamente!</h2>
     {% else %}
-        <h2>Selecciona los productos a devolver.</h2>
+        <h2>Selecciona el producto a devolver.</h2>
     {% endif %}
 
     <div>
@@ -16,10 +16,19 @@
     </div>
     <br>
 
+    {% if not returnCompleted %}
+        <label>Motivo de devolución</label>
+        <select name="reason">
+            <option>Defectuoso</option>
+            <option>Erróneo</option>
+            <option>No satisfactorio</option>
+        </select>
+    {% endif %}
+
     <form method="POST">
         <table>
             {% if returnCompleted %}
-                Productos devueltos:
+                Producto devuelto:
             {% else %}
                 Productos comprados:
             {% endif %}
@@ -40,14 +49,11 @@
                     <td>{{ prod.precio }} €</td>
                     <td>{{ prod.peso }} g</td>
                     {% if not saleCompleted %}
-                        <td><input type="checkbox" name="checkbox" value="{{ products.index(prod) }}"></td>
+                        <td><button type="submit" name="submit" value="{{ products.index(prod) }}">Devolver producto</button></td>
                     {% endif %}
                 </tr>
             {% endfor %}
         </table>
-        {% if not returnCompleted %}
-            <button type="submit" name="submit" value="return">Devolver</button>
-        {% endif %}
     </form>
 
 </body>
