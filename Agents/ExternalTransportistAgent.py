@@ -24,7 +24,7 @@ import requests
 
 from AgentUtil.OntoNamespaces import ACL, DSO, ECSDI
 from AgentUtil.FlaskServer import shutdown_server
-from AgentUtil.ACLMessages import build_message, send_message
+from AgentUtil.ACLMessages import build_message, send_message, get_message_properties
 from AgentUtil.Agent import Agent
 from AgentUtil.Logging import config_logger
 
@@ -147,15 +147,13 @@ def make_proposal(gm, content, send_to):
     precio = peso * randrange(1, 10)
 
     g = Graph()
-
-    g.bind()
-
+    g.bind('ECSDI', ECSDI)
     p_trans = ECSDI.Precio_Transporte
-    g.add(p_trans, ECSDI.Precio_envio, Literal(precio))
+    g.add((p_trans, ECSDI.Precio_envio, Literal(precio)))
 
     g = build_message(g, ACL.propose, sender=ExternalTransportAgent.uri, msgcnt=mss_cnt, receiver=send_to,  )
     
-    logging.info("We are sending a proposal. Weight of the package: " + str(peso) + "Limit: " + str(entrega) + " and price: " + str(precio) + "." )
+    logger.info("We are sending a proposal. Weight of the package: " + str(peso) + "Limit: " + str(entrega) + " and price: " + str(precio) + "." )
 
 
 @app.route("/iface", methods=['GET', 'POST'])
@@ -221,7 +219,7 @@ def comunicacion():
             gr = make_proposal(gm, msgdic['content'], msgdic['sender'])
         
         # Si se accepta la propuesta del transportista, entonces se debe enviar el pedidio.
-        if pref == ACL['accept-proposal'] or pref == ACL['reject-proposal']:
+        if perf == ACL['accept-proposal'] or perf == ACL['reject-proposal']:
             logger.info("Proposal has been accepted.")
             gr = build_message(Graph(),
                 ACL['inform'],

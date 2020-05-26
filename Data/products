@@ -1,0 +1,48 @@
+@prefix ns1: <http://www.semanticweb.org/joan/ontologies/2020/3/practicaECSDI#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ns1:Producto_interno_1 a ns1:Producto_interno ;
+    ns1:Marca "Apple"^^xsd:string ;
+    ns1:Nombre "iPhone 11"^^xsd:string ;
+    ns1:Peso "1"^^xsd:integer ;
+    ns1:Precio "809.0"^^xsd:float ;
+    ns1:Tipo "tecnologia"^^xsd:string .
+
+ns1:Producto_interno_2 a ns1:Producto_interno ;
+    ns1:Marca "Lenovo"^^xsd:string ;
+    ns1:Nombre "Portatil Lenovo ideaPad"^^xsd:string ;
+    ns1:Peso "3"^^xsd:integer ;
+    ns1:Precio "660.0"^^xsd:float ;
+    ns1:Tipo "tecnologia"^^xsd:string .
+
+ns1:Producto_interno_3 a ns1:Producto_interno ;
+    ns1:Marca "Logitech"^^xsd:string ;
+    ns1:Nombre "Teclado USB"^^xsd:string ;
+    ns1:Peso "1"^^xsd:integer ;
+    ns1:Precio "18.5"^^xsd:float ;
+    ns1:Tipo "tecnologia"^^xsd:string .
+
+ns1:Producto_interno_4 a ns1:Producto_interno ;
+    ns1:Marca "Apple"^^xsd:string ;
+    ns1:Nombre "MacBook Pro 128GB"^^xsd:string ;
+    ns1:Peso "3"^^xsd:integer ;
+    ns1:Precio "1500.0"^^xsd:float ;
+    ns1:Tipo "tecnologia"^^xsd:string .
+
+ns1:Producto_interno_5 a ns1:Producto_interno ;
+    ns1:Marca "Nike"^^xsd:string ;
+    ns1:Nombre "Zapatillas deportivas Nike"^^xsd:string ;
+    ns1:Peso "2"^^xsd:integer ;
+    ns1:Precio "62.25"^^xsd:float ;
+    ns1:Tipo "calzado"^^xsd:string .
+
+ns1:Producto_interno_6 a ns1:Producto_interno ;
+    ns1:Marca "Bic"^^xsd:string ;
+    ns1:Nombre "Pack 10 boligrafos azules"^^xsd:string ;
+    ns1:Peso "1"^^xsd:integer ;
+    ns1:Precio "4.9"^^xsd:float ;
+    ns1:Tipo "papeleria"^^xsd:string .
+
