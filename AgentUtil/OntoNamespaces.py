@@ -40,4 +40,3 @@ DSO = Namespace('http://www.semanticweb.org/directory-service-ontology#')
 
 # Our Own Ontology
 ECSDI = Namespace('http://www.semanticweb.org/joan/ontologies/2020/3/practicaECSDI')
-
