@@ -112,7 +112,7 @@ def register_message():
     gmess.add((reg_obj, DSO.Uri, SalesProcessorAgent.uri))
     gmess.add((reg_obj, FOAF.name, Literal(SalesProcessorAgent.name)))
     gmess.add((reg_obj, DSO.Address, Literal(SalesProcessorAgent.address)))
-    gmess.add((reg_obj, DSO.AgentType, ECSDI.Procesador_Compras)) # Això s'hauria de revisar. Si deixem el tipus a ECSDI.Procesador_Compras caldria afegir-ho a la ontologia.
+    gmess.add((reg_obj, DSO.AgentType, agn.SalesProcessorAgent)) # Això s'hauria de revisar. Si deixem el tipus a ECSDI.Procesador_Compras caldria afegir-ho a la ontologia.
 
     # Lo metemos en un envoltorio FIPA-ACL y lo enviamos
     gr = send_message(

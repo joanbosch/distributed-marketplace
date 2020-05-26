@@ -19,7 +19,7 @@ import requests
 
 from AgentUtil.OntoNamespaces import ACL, DSO, ECSDI
 from AgentUtil.FlaskServer import shutdown_server
-from AgentUtil.ACLMessages import build_message, send_message
+from AgentUtil.ACLMessages import build_message, send_message, get_message_properties
 from AgentUtil.Agent import Agent
 from AgentUtil.Logging import config_logger
 
@@ -121,7 +121,13 @@ def get_agent_info(type):
     mss_cnt += 1
     logger.info('Recibimos informacion del agente')
 
-    return gr
+    dic = get_message_properties(gr)
+    content = dic['content']
+    address = gr.value(subject=content, predicate=DSO.Address)
+    url = gr.value(subject=content, predicate=DSO.Uri)
+    name = gr.value(subject=content, predicate=FOAF.name)
+
+    return Agent(name, url, address, None)
 
 
 def send_message_to_agent(gmess, ragn, contentRes):
@@ -225,6 +231,7 @@ def browser_search():
 
             # Buscar a l'agent Processar Compra i demanar buscar productes, assignar els productes a la products_list
             venedor = get_agent_info(agn.SalesProcessorAgent)
+            print(venedor)
 
             ProductsGr = send_message_to_agent(gr, venedor, content)
 
