@@ -42,7 +42,7 @@ args = parser.parse_args()
 
 # Configuration stuff
 if args.port is None:
-    port = 9010
+    port = 9004
 else:
     port = args.port
 
@@ -69,7 +69,7 @@ mss_cnt = 0
 
 # Information about this agent (must be reviewed)
 SalesProcessorAgent = Agent('SalesProcessorAgent',
-                       agn.AgenteSimple,
+                       agn.SalesProcessorAgent,
                        'http://%s:%d/comm' % (hostname, port),
                        'http://%s:%d/Stop' % (hostname, port))
 
@@ -112,7 +112,7 @@ def register_message():
     gmess.add((reg_obj, DSO.Uri, SalesProcessorAgent.uri))
     gmess.add((reg_obj, FOAF.name, Literal(SalesProcessorAgent.name)))
     gmess.add((reg_obj, DSO.Address, Literal(SalesProcessorAgent.address)))
-    gmess.add((reg_obj, DSO.AgentType, ECSDI.Procesador_Compras)) # Això s'hauria de revisar. Si deixem el tipus a ECSDI.Procesador_Compras caldria afegir-ho a la ontologia.
+    gmess.add((reg_obj, DSO.AgentType, agn.SalesProcessorAgent)) # Això s'hauria de revisar. Si deixem el tipus a ECSDI.Procesador_Compras caldria afegir-ho a la ontologia.
 
     # Lo metemos en un envoltorio FIPA-ACL y lo enviamos
     gr = send_message(
