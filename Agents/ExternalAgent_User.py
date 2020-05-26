@@ -41,7 +41,7 @@ args = parser.parse_args()
 
 # Configuration stuff
 if args.port is None:
-    port = 9002
+    port = 9001
 else:
     port = args.port
 
@@ -178,6 +178,7 @@ def browser_search():
                 gr.add((subject_nombre, RDF.type, ECSDI.Filtrar_nombre))
                 gr.add((subject_nombre, ECSDI.Nombre, Literal(name, datatype=XSD.string)))
                 gr.add((content, ECSDI.Usa_filtro, URIRef(subject_nombre)))
+            logger.info("name")  
 
             marca = request.form['brand']
             if marca:
@@ -185,6 +186,8 @@ def browser_search():
                 gr.add((subject_marca, RDF.type, ECSDI.Filtrar_marca))
                 gr.add((subject_marca, ECSDI.Marca, Literal(marca, datatype=XSD.string)))
                 gr.add((content, ECSDI.Usa_filtro, URIRef(subject_marca)))
+            
+            logger.info("marca")
 
             precio_min = request.form['price_min']
             precio_max = request.form['price_max']
@@ -196,6 +199,7 @@ def browser_search():
                 if precio_max:
                     gr.add((subject_precio, ECSDI.Precio_maximo, Literal(precio_max, datatype=XSD.float)))
                 gr.add((content, ECSDI.Usa_filtro, URIRef(subject_precio)))
+            logger.info("price")
 
             tipo = request.form['type']
             if tipo:
@@ -203,21 +207,24 @@ def browser_search():
                 gr.add((subject_tipo, RDF.type, ECSDI.Filtrar_tipo))
                 gr.add((subject_tipo, ECSDI.Tipo, Literal(tipo, datatype=XSD.string)))
                 gr.add((content, ECSDI.Usa_filtro, URIRef(subject_tipo)))
-            
-            vend_externo = request.form['externalSeller']
-            vend_tienda = request.form['internalSeller']
+            logger.info("type")
+
+            vend_externo = request.form.get('externalSeller')
+            logger.info("externalseller")
+            vend_tienda = request.form.get('internalSeller')
+            logger.info("internalseller")
             if vend_externo or vend_tienda:
-                subject_vend_ext = ECSDI['Filtrar_vendedores_externos'+ mss_cnt]
+                subject_vend_ext = ECSDI['Filtrar_vendedores_externos'+ str(mss_cnt)]
                 gr.add((subject_vend_ext, RDF.type, ECSDI.Filtrar_vendedores_externos))
                 if vend_externo:
                     gr.add((subject_vend_ext, ECSDI.Incluir_productos_externos, Literal(vend_externo, datatype=XSD.boolean)))
                 if vend_tienda:
                     gr.add((subject_vend_ext, ECSDI.Incluir_productos_tienda, Literal(vend_tienda, datatype=XSD.boolean)))
                 gr.add((content, ECSDI.Usa_filtro, URIRef(subject_vend_ext)))
-            
+            logger.info("Se han aplicado los filtros")
 
             # Buscar a l'agent Processar Compra i demanar buscar productes, assignar els productes a la products_list
-            venedor = get_agent_info(agn.AgenteSimple, DirectoryAgent, ExternalUserAgent)
+            venedor = get_agent_info(agn.SalesProcessorAgent)
 
             ProductsGr = send_message_to_agent(gr, venedor, content)
 
@@ -314,7 +321,7 @@ def browser_buy():
 
             # buscar agente Procesar Compra y enviarle mensaje
             
-            venedor = get_agent_info(agn.AgenteSimple, DirectoryAgent, ExternalUserAgent)
+            venedor = get_agent_info(agn.SalesProcessorAgent)
 
             Respuesta = send_message_to_agent(gr, venedor, content)
             

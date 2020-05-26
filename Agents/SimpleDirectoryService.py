@@ -71,7 +71,7 @@ DirectoryAgent = Agent('DirectoryAgent',
                        agn.Directory,
                        'http://%s:%d/Register' % (hostname, port),
                        'http://%s:%d/Stop' % (hostname, port))
-app = Flask(__name__)
+app = Flask(__name__, template_folder="../Templates")
 mss_cnt = 0
 
 cola1 = Queue()  # Cola de comunicacion entre procesos
@@ -130,6 +130,7 @@ def register():
 
         agn_type = gm.value(subject=content, predicate=DSO.AgentType)
         rsearch = dsgraph.triples((None, DSO.AgentType, agn_type))
+        print(rsearch)
         if rsearch is not None:
             agn_uri = next(rsearch)[0]
             agn_add = dsgraph.value(subject=agn_uri, predicate=DSO.Address)
