@@ -156,29 +156,7 @@ def browser_search():
     global mss_cnt
     global products_list
     global numProdCarrito
-    products_list = [ 
-        {
-            "nombre": "iphone 11",
-            "marca": "apple",
-            "tipo": "tecnologia",
-            "precio": 860,
-            "peso": 200
-        },
-        {
-            "nombre": "iphone 8",
-            "marca": "apple",
-            "tipo": "tecnologia",
-            "precio": 860,
-            "peso": 200
-        },
-        {
-            "nombre": "iphoneX",
-            "marca": "apple",
-            "tipo": "tecnologia",
-            "precio": 860,
-            "peso": 200
-        }
-    ]
+    products_list = []
     if request.method == 'GET':
         return render_template('search.html', products=None, numCarrito=numProdCarrito)
     elif request.method == 'POST':
