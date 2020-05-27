@@ -223,9 +223,9 @@ def browser_search():
                 subject_vend_ext = ECSDI['Filtrar_vendedores_externos'+ str(mss_cnt)]
                 gr.add((subject_vend_ext, RDF.type, ECSDI.Filtrar_vendedores_externos))
                 if vend_externo:
-                    gr.add((subject_vend_ext, ECSDI.Incluir_productos_externos, Literal(vend_externo, datatype=XSD.boolean)))
+                    gr.add((subject_vend_ext, ECSDI.Incluir_productos_externos, Literal(True, datatype=XSD.boolean)))
                 if vend_tienda:
-                    gr.add((subject_vend_ext, ECSDI.Incluir_productos_tienda, Literal(vend_tienda, datatype=XSD.boolean)))
+                    gr.add((subject_vend_ext, ECSDI.Incluir_productos_tienda, Literal(True, datatype=XSD.boolean)))
                 gr.add((content, ECSDI.Usa_filtro, URIRef(subject_vend_ext)))
             logger.info("Se han aplicado los filtros")
 

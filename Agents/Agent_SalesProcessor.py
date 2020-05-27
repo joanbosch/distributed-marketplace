@@ -130,7 +130,6 @@ def register_message():
 def comunicacion():
     """
     Entrypoint de comunicacion
-    Quan tot això funcioni, respondrà a peticions de cerca i registrarà comandes
     """
     global dsgraph
     global mss_cnt
@@ -166,39 +165,39 @@ def comunicacion():
                 
                 # Search products action
                 if accion == ECSDI.Buscar_productos:
-                    searchFilters = gm.objects(content, ECSDI.Filtro_busqueda)
+                    searchFilters = gm.objects(content, ECSDI.Usa_filtro)
                     searchFilters_dict = {}
-                    for filter in searchFilters:
-                        if gm.value(subject=filter, predicate=RDF.type) == ECSDI.Filtrar_nombre:
-                            name = gm.value(subject=filter, predicate=ECSDI.Nombre)
+                    for aFilter in searchFilters:
+                        if gm.value(subject=aFilter, predicate=RDF.type) == ECSDI.Filtrar_nombre:
+                            name = gm.value(subject=aFilter, predicate=ECSDI.Nombre)
                             logger.info('Nombre: ' + name)
                             searchFilters_dict['name'] = name
-                        elif gm.value(subject=filter, predicate=RDF.type) == ECSDI.Filtrar_marca:
-                            brand = gm.value(subject=filter, predicate=ECSDI.Marca)
+                        elif gm.value(subject=aFilter, predicate=RDF.type) == ECSDI.Filtrar_marca:
+                            brand = gm.value(subject=aFilter, predicate=ECSDI.Marca)
                             logger.info('Marca: ' + brand)
                             searchFilters_dict['brand'] = brand
-                        elif gm.value(subject=filter, predicate=RDF.type) == ECSDI.Filtrar_tipo:
-                            prod_type = gm.value(subject=filter, predicate=ECSDI.Tipo)
+                        elif gm.value(subject=aFilter, predicate=RDF.type) == ECSDI.Filtrar_tipo:
+                            prod_type = gm.value(subject=aFilter, predicate=ECSDI.Tipo)
                             logger.info('Tipo: ' + prod_type)
                             searchFilters_dict['prod_type'] = prod_type
-                        elif gm.value(subject=filter, predicate=RDF.type) == ECSDI.Filtrar_precio:
-                            min_price = gm.value(subject=filter, predicate=ECSDI.Precio_minimo)
-                            max_price = gm.value(subject=filter, predicate=ECSDI.Precio_maximo)
+                        elif gm.value(subject=aFilter, predicate=RDF.type) == ECSDI.Filtrar_precio:
+                            min_price = gm.value(subject=aFilter, predicate=ECSDI.Precio_minimo)
+                            max_price = gm.value(subject=aFilter, predicate=ECSDI.Precio_maximo)
                             if min_price:
                                 logger.info('Precio minimo: ' + min_price)
                                 searchFilters_dict['min_price'] = min_price.toPython()
                             if max_price:
                                 logger.info('Precio maximo: ' + max_price)
                                 searchFilters_dict['max_price'] = max_price.toPython()
-                        elif gm.value(subject=filter, predicate=RDF.type) == ECSDI.Filtrar_vendedores_externos:
-                            external_prod = gm.value(subject=filter, predicate=ECSDI.Incluir_productos_externos)
-                            internal_prod = gm.value(subject=filter, predicate=ECSDI.Incluir_productos_tienda)
-                            if external_prod and external_prod == False: # potser al == cal afegir .toPython()
-                                logger.info('No se incluyen productos externos')
-                                searchFilters_dict['exclude_external_prod'] = True
-                            if internal_prod and internal_prod == False: # potser al == cal afegir .toPython()
-                                logger.info('No se incluyen productos internos')
-                                searchFilters_dict['exclude_internal_prod'] = True
+                        elif gm.value(subject=aFilter, predicate=RDF.type) == ECSDI.Filtrar_vendedores_externos:
+                            external_prod = gm.value(subject=aFilter, predicate=ECSDI.Incluir_productos_externos)
+                            internal_prod = gm.value(subject=aFilter, predicate=ECSDI.Incluir_productos_tienda)
+                            if external_prod is not None and external_prod:
+                                logger.info('Se incluyen productos externos')
+                                searchFilters_dict['include_external_prod'] = True
+                            if internal_prod is not None and internal_prod:
+                                logger.info('Se incluyen productos internos')
+                                searchFilters_dict['include_internal_prod'] = True
 
                     gr = build_message(searchProducts(**searchFilters_dict),
                         ACL['inform-result'],
@@ -267,7 +266,10 @@ def agentbehavior1(cola):
     #Registramos el agente
     gr = register_message()
 
-def searchProducts(name=None, brand=None, prod_type=None, min_price=0.0, max_price=sys.float_info.max, exclude_external_prod=None, exclude_internal_prod=None):
+def searchProducts(name=None, brand=None, prod_type=None, min_price=0.0, max_price=sys.float_info.max, include_external_prod=False, include_internal_prod=False):
+    if not include_external_prod and not include_internal_prod:
+        return Graph()
+
     graph = Graph()
     ontologyFile = open('../Data/products')
     graph.parse(ontologyFile, format='turtle')
@@ -282,10 +284,10 @@ def searchProducts(name=None, brand=None, prod_type=None, min_price=0.0, max_pri
         where {
         """
 
-    if exclude_external_prod is None:
+    if include_external_prod:
         query += """{ ?producto rdf:type ecsdi:Producto_exteno }"""
         first_prod_class = 1
-    if exclude_internal_prod is None:
+    if include_internal_prod:
         if first_prod_class == 1:
             query += """ UNION """
         query += """{ ?producto rdf:type ecsdi:Producto_interno }"""
@@ -357,7 +359,7 @@ def recordNewOrder(gm):
 
     gNewOrder = Graph()
     gNewOrder.bind('ECSDI', ECSDI)
-    order = ECSDI['pedido' + mss_cnt]
+    order = ECSDI['pedido' + str(mss_cnt)]
     # There is only one order in a 'Procesar_Compra' message, 'for' only will do one loop
     for neworder in gm.subjects(RDF.type, ECSDI.Procesar_Compra):
         city = gm.value(subject=neworder, predicate=ECSDI.Direccion_Envio)
@@ -390,7 +392,7 @@ def recordNewOrder(gm):
 def assignToLogisticCenter(gr):
     global mss_cnt
 
-    content = ECSDI['enviar_pedido' + mss_cnt]
+    content = ECSDI['enviar_pedido' + str(mss_cnt)]
     gr.add((content, RDF.type, ECSDI.Enviar_Pedido))
 
     # There is only one order. To find it, first we obtain a list with this order (subjectsFound) and later we find the order inside the list.
