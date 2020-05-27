@@ -75,6 +75,9 @@ products_list = []
 # Productos seleccionados
 products_selected = []
 
+# Productos comprados
+products_comprados = []
+
 # Numero de productos seleccionados para comprar
 numProdCarrito = 0
 
@@ -221,9 +224,9 @@ def browser_search():
                 subject_vend_ext = ECSDI['Filtrar_vendedores_externos'+ str(mss_cnt)]
                 gr.add((subject_vend_ext, RDF.type, ECSDI.Filtrar_vendedores_externos))
                 if vend_externo:
-                    gr.add((subject_vend_ext, ECSDI.Incluir_productos_externos, Literal(vend_externo, datatype=XSD.boolean)))
+                    gr.add((subject_vend_ext, ECSDI.Incluir_productos_externos, Literal(True, datatype=XSD.boolean)))
                 if vend_tienda:
-                    gr.add((subject_vend_ext, ECSDI.Incluir_productos_tienda, Literal(vend_tienda, datatype=XSD.boolean)))
+                    gr.add((subject_vend_ext, ECSDI.Incluir_productos_tienda, Literal(True, datatype=XSD.boolean)))
                 gr.add((content, ECSDI.Usa_filtro, URIRef(subject_vend_ext)))
             
             logger.info("Se han aplicado los filtros")
@@ -244,11 +247,7 @@ def browser_search():
                             products_list.append({})
                             index += 1
                 if s in subject_pos:
-                    print( "subject" + s)
-                    print( "predicado" + p)
-                    print( "object" + o)
                     subject_dict = products_list[subject_pos[s]]
-                    #if p == RDF.type:
                     subject_dict['url'] = s
                     if p == ECSDI.Marca:
                         subject_dict['marca'] = o
@@ -332,11 +331,10 @@ def browser_buy():
                 gr.add((content, ECSDI.Lista_Productos_ProcesarCompra, URIRef(subject_product)))
 
             # buscar agente Procesar Compra y enviarle mensaje
-            """
             venedor = get_agent_info(agn.SalesProcessorAgent)
 
             Respuesta = send_message_to_agent(gr, venedor, content)
-            """
+
             # Guardamos la compra en nuestra bbdd, para que asi saber que productos puede el usuario devolver
             saveNewOrder(gr)
             
@@ -361,21 +359,22 @@ def browser_buy():
 @app.route("/return", methods=['GET', 'POST'])
 def browser_return():
     global mss_cnt
+    global products_comprados
     if request.method == 'GET':
-        logger.info("Conseguimos y mostramos el historial de compra.")
+        logger.info("Mostramos el historial de compra.")
 
-        products_comprados = []
-        # Contactar agente para conseguir el historial de compra.
-        gr = Graph()
+        products_comprados = get_purchases()
 
         return render_template('return.html', products=products_comprados, returnCompleted=None)
 
     elif request.method == 'POST':
         logger.info("Enviando peticion de devolucion.")
-
-        products_returned = []
+        prod = []
+        index = request.form['submit']
+        prod.append(products_comprados[int(index)])
+        print(prod)
         
-        return render_template('return.html', products=products_returned, returnCompleted=True)
+        return render_template('return.html', products=prod, returnCompleted=True)
 
 
 @app.route("/Stop")
@@ -417,8 +416,27 @@ def agentbehavior1():
 def saveNewOrder(graf):
     logger.info("Guardando compra a la bbdd.")
 
-    graf.parse(open("../Data/productosComprados"), format='turtle')
-    graf.serialize(destination='../Data/productosComprados', format='turtle')
+    graf.parse(open("../Data/purchases"), format='turtle')
+    graf.serialize(destination='../Data/purchases', format='turtle')
+
+def get_purchases():
+    logger.info("Consiguiendo el historial de compras")
+    
+    g = Graph()
+    g.parse(open('../Data/purchases'), format='turtle')
+    
+    purchases = []
+
+    for product in g.subjects(RDF.type, ECSDI.Producto):
+        prod  = []
+        prod.append(str(g.value(subject=product, predicate=ECSDI.Nombre)))
+        prod.append(str(g.value(subject=product, predicate=ECSDI.Marca)))
+        prod.append(str(g.value(subject=product, predicate=ECSDI.Tipo)))
+        prod.append(str(g.value(subject=product, predicate=ECSDI.Precio)))
+        prod.append(str(g.value(subject=product, predicate=ECSDI.Peso)))
+        purchases.append(prod)
+
+    return purchases
 
 if __name__ == '__main__':
     # Ponemos en marcha los behaviors

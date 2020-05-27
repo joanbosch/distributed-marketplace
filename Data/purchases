@@ -1,0 +1,41 @@
+@prefix ns1: <http://www.semanticweb.org/joan/ontologies/2020/3/practicaECSDI#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ns1:Procesar_Compra_2 a ns1:Procesar_Compra ;
+    ns1:Direccion_Envio "Barcelona"^^xsd:string ;
+    ns1:Informacion_Pago "12345"^^xsd:string ;
+    ns1:Lista_Productos_ProcesarCompra ns1:Producto_interno_1,
+        ns1:Producto_interno_3,
+        ns1:Producto_interno_4,
+        ns1:Producto_interno_6 ;
+    ns1:Precio_total_pedido "2332.4"^^xsd:float ;
+    ns1:Prioridad_Entrega "maxima"^^xsd:string .
+
+ns1:Producto_interno_1 a ns1:Producto ;
+    ns1:Marca "Apple"^^xsd:string ;
+    ns1:Nombre "iPhone 11"^^xsd:string ;
+    ns1:Peso 1 ;
+    ns1:Precio "809.0"^^xsd:float ;
+    ns1:Tipo "tecnologia"^^xsd:string .
+
+ns1:Producto_interno_3 a ns1:Producto ;
+    ns1:Marca "Logitech"^^xsd:string ;
+    ns1:Nombre "Teclado USB"^^xsd:string ;
+    ns1:Peso 1 ;
+    ns1:Precio "18.5"^^xsd:float ;
+    ns1:Tipo "tecnologia"^^xsd:string .
+
+ns1:Producto_interno_4 a ns1:Producto ;
+    ns1:Marca "Apple"^^xsd:string ;
+    ns1:Nombre "MacBook Pro 128GB"^^xsd:string ;
+    ns1:Peso 3 ;
+    ns1:Precio "1500.0"^^xsd:float ;
+    ns1:Tipo "tecnologia"^^xsd:string .
+
+ns1:Producto_interno_6 a ns1:Producto ;
+    ns1:Marca "Bic"^^xsd:string ;
+    ns1:Nombre "Pack 10 boligrafos azules"^^xsd:string ;
+    ns1:Peso 1 ;
+    ns1:Precio "4.9"^^xsd:float ;
+    ns1:Tipo "papeleria"^^xsd:string .
+
