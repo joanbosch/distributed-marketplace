@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Registro Producto Vendedor Externo</title>
+</head>
+<body>
+    <h1>Registro realizado correctamente</h1>
+    <br>
+    <table cellpadding="5px">
+        <tr>
+            <th><b>NOMBRE</b></th>
+            <th><b>MARCA</b></th>
+            <th><b>MODELO</b></th>
+            <th><b>PRECIO</b></th>
+            <th><b>PESO</b></th>
+        </tr>
+        <tr>
+            <td>{{ product.nom }}</td>
+            <td>{{ product.marca }}</td>
+            <td>{{ product.model }}</td>
+            <td>{{ product.preu }}</td>
+            <td>{{ product.peso }}</td>
+        </tr>
+    </table>
+    <br>
+    <a href="{{url_for('browser_externalseller')}}">Volver</a>
+</body>
+</html>

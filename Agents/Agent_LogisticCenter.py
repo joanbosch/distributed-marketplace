@@ -11,7 +11,7 @@ import argparse
 from datetime import datetime
 
 from flask import Flask, render_template, request
-from rdflib import Graph, Namespace, Literal, XSD
+from rdflib import Graph, Namespace, Literal, XSD, URIRef
 from rdflib.namespace import FOAF, RDF
 import requests
 import random
@@ -125,22 +125,6 @@ def register_message():
 
     return gr
 
-    
-
-
-#Agente Centro Logistico no se si te iface ( jo crec que s'ha de borrar )
-@app.route("/iface", methods=['GET', 'POST'])
-def browser_iface():
-    """
-    Permite la comunicacion con el agente via un navegador
-    via un formulario
-    """
-    if request.method == 'GET':
-        return render_template('iface.html')
-    else:
-        user = request.form['username']
-        mess = request.form['message']
-        return render_template('riface.html', user=user, mess=mess)
 
 @app.route("/Stop")
 def stop():
@@ -156,7 +140,6 @@ def stop():
 
 @app.route("/comm")
 def comunicacion():
-    
     """
         Entrypoint de comunicacion del agente
         Busqueda de un Centro Logitico disponible
@@ -180,40 +163,33 @@ def comunicacion():
     else:
         #Obtenemos la performativa
         perf = msgdic['performative']
-        env_url = None
         if perf == ACL['request']:
             #Contenido del pedido: ciudad destino + prioridad entrega
             logger.info('Peticion de envío de pedido')
-            #Crear lot amb el graph de lots on tingui guardats altres pedidos amb: mateixa ciutat + prioritat envio
+            #Añadimos el pedido al registro de lotes a enviar
             add_to_lote(gm, msgdic['content'])
             #Comprobar si estem ciertas horas del dia y enviar lote
             if time_to_send():
                 logger.info('Se envian lotes a los transportistas')
-                enviosUrl = createSend()
-
-                envios = Graph()
-                envios.parse(open('../data/enviaments'), format='turtle')
-                for env in enviosUrl:
-                    fecha = envios.value(subject=env, predicate=ECSDI.Fecha_Entrega)
-                    peso = envios.value(subject=env, predicate=ECSDI.Peso)
-                    env_url = env
-                    requestTransport(fecha,peso)
+                #Enviamos
+                createSend()
 
         elif perf == ACL['proposal']:
             #El transportista nos envia un precio sobre el pedido propuesto enviado
             logger.info('Recibimos el precio ofrecido por el transportista')
-            precio = gm.value(subject=msgdic['content'], predicate=ECSDI.Precio_Transporte)
+            precio = gm.value(subject=msgdic['content'], predicate=ECSDI.Precio_envio)
             if precio < 100:
                 logger.info('Aceptamos el precio propuesto por el transportista')
+
                 gr = send_message(
                     build_message(gr, 
                     perf = ACL['accept-proposal'], 
                     sender = LogisticCenterAgent.uri, 
                     receiver = msgdic['sender'],
                     msgcnt = mss_cnt), msgdic['sender'])
-                removeLote(env_url)
             else:
                 logger.info('No aceptamos el precio propuesto por el transportista')
+
                 gr = send_message(
                     build_message(gr, 
                     perf = ACL['reject-proposal'], 
@@ -261,101 +237,122 @@ def agentbehavior1(queue):
             # requests.get(LogisticCenterAgent.stop)
 
 def time_to_send():
-    time = datetime.now().time()
-    t="10:00:00"
-    ten_am = datetime.strptime(t, '%H:%M:%S').time()
-    t="12:00:00"
-    twelve_pm = datetime.strptime(t, '%H:%M:%S').time()
-    t="16:00:00"
-    four_pm = datetime.strptime(t, '%H:%M:%S').time()
-    t="18:00:00"
-    six_pm = datetime.strptime(t, '%H:%M:%S').time()
 
-    if (time > ten_am and time < twelve_pm) or (time > four_pm and time < six_pm):
+    #Enviamos paquetes de 9:00 a 20:00
+    time = datetime.now().time()
+    nine_am = datetime.strptime("09:00:00", '%H:%M:%S').time()
+    eight_pm = datetime.strptime("20:00:00", '%H:%M:%S').time()
+
+    if (time > nine_am and time < eight_pm):
         return True
     else:
         return False
 
 def add_to_lote(gm, content):
-    #Añadimos el envio a un lote
+
     lotes = Graph()
-    lotes.parse(open('../data/lotes'), format='turtle')
+    lotes.parse(open('../Data/lotes'), format='turtle')
+
     #Obtenemos valores recibidos del content
     city = gm.value(subject=content, predicate=ECSDI.Ciudad_Destino)
     priority = gm.value(subject=content, predicate=ECSDI.Prioridad_Enterga)
-    #Numero de envio random para asignar un sujeto
-    subjectLote = ECSDI['Lote_' + str(random.randint(1, sys.float_info.max))]
-    lotes.add((subjectLote, RDF.type, ECSDI.Lote))
-    lotes.add((subjectLote, ECSDI.Ciudad_Destino, Literal(city, datatype=XSD.string)))
-    lotes.add((subjectLote, ECSDI.Prioridad_Entrega, Literal(priority, datatype=XSD.string)))
+    peso = gm.value(subject=content, predicate=ECSDI.Peso_total_pedido)
 
-    lotes.serialize(destination='../data/lotes', format='turtle')
+    #Añadimos el pedido a un lote
+    subjectLote = ECSDI['Lote_' + str(mss_cnt)]
+    lotes.add((subjectLote, RDF.type, ECSDI.Lote))
+    lotes.add((content, ECSDI.Ciudad_Destino, Literal(city, datatype=XSD.string)))
+    lotes.add((content, ECSDI.Prioridad_Entrega, Literal(priority, datatype=XSD.string)))
+    lotes.add((content, ECSDI.Peso_total_pedido, Literal(peso, datatype=XSD.float)))
+    lotes.add((subjectLote, ECSDI.Pedidos_lote, URIRef(content)))
+
+    lotes.serialize(destination='../Data/lotes', format='turtle')
 
 def createDate(date):
     return (date - datetime.datetime.utcfromtimestamp(0)).total_seconds() * 1000.0
 
 def createSend():
-    #eliminar de lotes el que enviem
+    #Enviamos los lotes
+
+    #Guardamos el registro de los envios
     envios = Graph()
-    envios.parse(open('../data/enviaments'), format='turtle')
+    envios.parse(open('../Data/enviaments'), format='turtle')
+
+    #Obtenemos los lotes a enviar
     lotes = Graph()
-    lotes.parse(open('../data/lotes'), format='turtle')
-    lista_envios = []
-    #afagar els lotes de maxima prioritat
+    lotes.parse(open('../Data/lotes'), format='turtle')
+
+
+    #1.Guardar el lote como un envio
+    #2.Atributos: Destino, Peso, Fecha Limite
+    #3.Peticion envio a transportistas
+    #4.Eliminamos lote del registro
+
+
+    #Miramos todos los lotes a enviar con prioridad maxima
     for lote in lotes.subjects(RDF.type, ECSDI.Lote):
-        subjectEnvio = ECSDI['Envio_' + str(random.randint(1, sys.float_info.max))]
-        date = createDate(datetime.datetime.utcnow() + datetime.timedelta(days=9))
-        peso = random.randrange(1, 100)
-        for predicate, objects in lotes[lote]:
-            if predicate == ECSDI.Prioridad_Entrega:
-                if objects == 'maxima':
-                    enviar = True
-                    #Creem un envio amb prioritat maxima
-                    envios.add((subjectEnvio, RDF.type, ECSDI.Envio))
-                    envios.add((subjectEnvio, ECSDI.Fecha_Entrega, Literal(date, datatype=XSD.float)))
-            if enviar == True:
-                if predicate == ECSDI.Ciudad_Destino:
-                    envios.add((subjectEnvio, ECSDI.Ciudad_Destino, objects))
-                    envios.add((subjectEnvio, ECSDI.Peso, Literal(peso, datatype=XSD.integer)))
-        lista_envios.append(subjectEnvio)
+        for pedido in lotes.objects(subject=lote, predicate=ECSDI.Pedidos_lote):
+            city = lotes.value(subject=pedido, predicate=ECSDI.Ciudad_Destino)
+            priority = lotes.value(subject=pedido, predicate=ECSDI.Prioridad_Entrega)
+            peso = lotes.value(subject=pedido, predicate=ECSDI.Peso_total_pedido)
+            if priority == 'maxima':
+                subjectEnvio = ECSDI['Envio_' + str(mss_cnt)]
+                envios.add((subjectEnvio, RDF.type, ECSDI.Transportar_Paquete))
+                date = createDate(datetime.datetime.utcnow() + datetime.timedelta(days=9))
+                envios.add((subjectEnvio, ECSDI.Terminio_maximo_entrega, Literal(date, datatype=XSD.dateTime)))
+                envios.add((subjectEnvio, ECSDI.Destino_pedido, Literal(city, datatype=XSD.sting)))
+                envios.add((subjectEnvio, ECSDI.Peso, Literal(peso, datatype=XSD.integer)))
 
-    #agafar els lotes de normal prioritat
-    for lote in lotes.subjects(RDF.type, ECSDI.Lote):       
-        subjectEnvio = ECSDI['Envio_' + str(random.randint(1, sys.float_info.max))]
-        date = createDate(datetime.datetime.utcnow() + datetime.timedelta(days=9))
-        peso = random.randrange(1, 100)
-        for predicate, objects in lotes[lote]:
-            if predicate == ECSDI.Prioridad_Entrega:
-                if objects == 'normal':
-                    enviar = True
-                    #Creem un envio amb prioritat maxima
-                    envios.add((subjectEnvio, RDF.type, ECSDI.Envio))
-                    envios.add((subjectEnvio, ECSDI.Fecha_Entrega, Literal(date, datatype=XSD.float)))
-            if enviar == True:
-                if predicate == ECSDI.Ciudad_Destino:
-                    envios.add((subjectEnvio, ECSDI.Ciudad_Destino, objects))
-                    envios.add((subjectEnvio, ECSDI.Peso, Literal(peso, datatype=XSD.integer)))
-        lista_envios.append(subjectEnvio)
+                #Pedimos transporte
+                requestTransport(subjectEnvio)
 
-    return lista_envios
+                #Eliminamos Lote enviado
+                removeLote(lote)
 
+    #Miramos todos los lotes a enviar con prioridad normal
+    for lote in lotes.subjects(RDF.type, ECSDI.Lote):
+        for pedido in lotes.objects(subject=lote, predicate=ECSDI.Pedidos_lote):
+            city = lotes.value(subject=pedido, predicate=ECSDI.Ciudad_Destino)
+            priority = lotes.value(subject=pedido, predicate=ECSDI.Prioridad_Entrega)
+            peso = lotes.value(subject=pedido, predicate=ECSDI.Peso_total_pedido)
+            if priority == 'normal':
+                subjectEnvio = ECSDI['Envio_' + str(mss_cnt)]
+                envios.add((subjectEnvio, RDF.type, ECSDI.Transportar_Paquete))
+                date = createDate(datetime.datetime.utcnow() + datetime.timedelta(days=9))
+                envios.add((subjectEnvio, ECSDI.Terminio_maximo_entrega, Literal(date, datatype=XSD.dateTime)))
+                envios.add((subjectEnvio, ECSDI.Destino_pedido, Literal(city, datatype=XSD.sting)))
+                envios.add((subjectEnvio, ECSDI.Peso, Literal(peso, datatype=XSD.integer)))
 
+                #Pedimos transporte
+                requestTransport(subjectEnvio)
 
-def requestTransport(date, peso):
+                #Eliminamos Lote enviado
+                removeLote(lote)
+
+      
+
+def requestTransport(urlEnvio):
 
     global mss_cnt
     
     logger.info('Pedimos transporte a los Agentes Externos de Transporte')
 
-    content = ECSDI['Peticio_transport' + str(mss_cnt)]
+    content = ECSDI['Transportar_Paquete' + str(mss_cnt)]
+
+    envios = Graph()
+    envios.parse(open('../Data/enviaments'), format='turtle')
+
+    date = envios.value(subject=urlEnvio, predicate=ECSDI.Terminio_maximo_entrega)
+    peso = envios.value(subject=urlEnvio, predicate=ECSDI.Peso)
+    ciudad = envios.value(subject=urlEnvio, predicate=ECSDI.Destino_pedido)
 
     gr = Graph()
     gr.add((content, RDF.type, ECSDI.Transportar_Paquete))
+    gr.add((content, ECSDI.Terminio_maximo_entrega, Literal(date, datatype=XSD.dateTime)))
+    gr.add((content, ECSDI.Peso, Literal(peso, datatype=XSD.integer)))
+    gr.add((content, ECSDI.Destino_pedido, Literal(ciudad, datatype=XSD.string)))
 
-    gr.add((content, ECSDI.Terminio_maximo_entrega, Literal(date, datatype=XSD.float)))
-    gr.add((content, ECSDI.Peso, Literal(peso, datatype=XSD.float)))
-
-    TransportAg = get_agent_info(agn.ExternalTransportAgent , DirectoryAgent, LogisticCenterAgent, mss_cnt)
+    TransportAg = get_agent_info(agn.ExternalTransportAgent)
 
     gr = send_message(
         build_message(gr, 
@@ -365,6 +362,8 @@ def requestTransport(date, peso):
         msgcnt = mss_cnt,
         content = content), TransportAg.address)
 
+
+
 def removeLote(url):
     lotes = Graph()
     lotes.parse(open('../data/lotes'), format='turtle')
@@ -372,28 +371,40 @@ def removeLote(url):
     #eliminamos el lote ya enviado
     lotes.remove((url, None, None))
 
-def get_agent_info(type_, directory_agent, sender, msgcnt):
+
+
+def get_agent_info(type):
+
+    global mss_cnt
+    logger.info('Buscamos en el servicio de registro')
+
     gmess = Graph()
-    # Construimos el mensaje de registro
+
     gmess.bind('foaf', FOAF)
     gmess.bind('dso', DSO)
-    ask_obj = agn[sender.name + '-Search']
+    reg_obj = agn[LogisticCenterAgent.name + '-Search']
+    gmess.add((reg_obj, RDF.type, DSO.Search))
+    gmess.add((reg_obj, DSO.AgentType, type))
 
-    gmess.add((ask_obj, RDF.type, DSO.Search))
-    gmess.add((ask_obj, DSO.AgentType, type_))
-    gr = send_message(
-        build_message(gmess, perf=ACL.request, sender=sender.uri, receiver=directory_agent.uri, msgcnt=msgcnt,
-                      content=ask_obj),
-        directory_agent.address
-    )
+    msg = build_message(gmess, perf=ACL.request,
+                        sender=LogisticCenterAgent.uri,
+                        receiver=DirectoryAgent.uri,
+                        content=reg_obj,
+                        msgcnt=mss_cnt)
+
+    gr = send_message(msg, DirectoryAgent.address)
+    mss_cnt += 1
+    logger.info('Recibimos informacion del agente')
+
     dic = get_message_properties(gr)
     content = dic['content']
-
     address = gr.value(subject=content, predicate=DSO.Address)
     url = gr.value(subject=content, predicate=DSO.Uri)
     name = gr.value(subject=content, predicate=FOAF.name)
 
     return Agent(name, url, address, None)
+
+    
 
 if __name__ == '__main__':
     # Ponemos en marcha los behaviors

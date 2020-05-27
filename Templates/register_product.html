@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Registro Producto Vendedor Externo</title>
+</head>
+<body>
+<h1>Registro de productos</h1>
+<div>
+    <a href="{{url_for('browser_externalseller')}}">Volver al Inicio</a>
+</div>
+<br>
+<form method="post">
+    <input type="text" name="name" placeholder="Nombre"/><br>
+    <input type="text" name="brand" placeholder="Marca"/><br>
+    <input type="text" name="tipo" placeholder="Modelo"/><br>
+    <input type="number" name="price" step="0.01" min="0.0" placeholder="Precio"/><br>
+    <input type="number" name="weigth" step="0.5" min="0.0" placeholder="Peso"/><br>
+    <input type="submit" value="Registrar">
+</form>
+
+</body>
+</html>
