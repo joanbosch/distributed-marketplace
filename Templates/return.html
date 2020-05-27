@@ -24,7 +24,7 @@
             <option>No satisfactorio</option>
         </select>
     {% endif %}
-
+    
     <form method="POST">
         <table>
             {% if returnCompleted %}
@@ -43,11 +43,11 @@
             <tr>
             {% for prod in products %}
                 <tr>
-                    <td>{{ prod[0] }}</td> <!--Nombre-->
-                    <td>{{ prod[1] }}</td> <!--Marca-->
-                    <td>{{ prod[2] }}</td> <!--Tipo-->
-                    <td>{{ prod[3] }} €</td> <!--Precio-->
-                    <td>{{ prod[4] }} g</td> <!--Peso-->
+                    <td>{{ prod.nombre }}</td>
+                    <td>{{ prod.marca }}</td>
+                    <td>{{ prod.tipo }}</td>
+                    <td>{{ prod.precio }} €</td>
+                    <td>{{ prod.peso }} g</td>
                     {% if not returnCompleted %}
                         <td><button type="submit" name="submit" value="{{ products.index(prod) }}">Devolver producto</button></td>
                     {% endif %}

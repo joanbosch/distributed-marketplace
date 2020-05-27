@@ -372,7 +372,6 @@ def browser_return():
         prod = []
         index = request.form['submit']
         prod.append(products_comprados[int(index)])
-        print(prod)
         
         return render_template('return.html', products=prod, returnCompleted=True)
 
@@ -428,12 +427,13 @@ def get_purchases():
     purchases = []
 
     for product in g.subjects(RDF.type, ECSDI.Producto):
-        prod  = []
-        prod.append(str(g.value(subject=product, predicate=ECSDI.Nombre)))
-        prod.append(str(g.value(subject=product, predicate=ECSDI.Marca)))
-        prod.append(str(g.value(subject=product, predicate=ECSDI.Tipo)))
-        prod.append(str(g.value(subject=product, predicate=ECSDI.Precio)))
-        prod.append(str(g.value(subject=product, predicate=ECSDI.Peso)))
+        prod  = {}
+        prod['url'] = product
+        prod['nombre'] = (str(g.value(subject=product, predicate=ECSDI.Nombre)))
+        prod['marca'] = (str(g.value(subject=product, predicate=ECSDI.Marca)))
+        prod['tipo'] = (str(g.value(subject=product, predicate=ECSDI.Tipo)))
+        prod['precio'] = (str(g.value(subject=product, predicate=ECSDI.Precio)))
+        prod['peso'] = (str(g.value(subject=product, predicate=ECSDI.Peso)))
         purchases.append(prod)
 
     return purchases
