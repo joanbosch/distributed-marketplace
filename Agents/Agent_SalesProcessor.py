@@ -1,9 +1,8 @@
 """
-Created on Fri Dec 27 15:58:13 2013
-Esqueleto de agente usando los servicios web de Flask
+Agente Procesador de Compras. Realiza busquedas de productos, registra compras (delegando el envio al centro logistico) y gestiona devoluciones.
+
 /comm es la entrada para la recepcion de mensajes del agente
 /Stop es la entrada que para el agente
-Tiene una funcion AgentBehavior1 que se lanza como un thread concurrente
 Asume que el agente de registro esta en el puerto 9000
 @author: javier
 """
@@ -225,13 +224,6 @@ def comunicacion():
                         msgcnt=mss_cnt,
                         receiver=msgdic['sender'])
 
-            # Aqui realizariamos lo que pide la accion
-            # Por ahora simplemente retornamos un Inform-done
-            #gr = build_message(Graph(),
-            #    ACL['inform-done'],
-            #    sender=SalesProcessorAgent.uri,
-            #    msgcnt=mss_cnt,
-            #    receiver=msgdic['sender'], )
     mss_cnt += 1
 
     logger.info('Respondemos a la peticion')
@@ -364,16 +356,20 @@ def recordNewOrder(gm):
     for neworder in gm.subjects(RDF.type, ECSDI.Procesar_Compra):
         city = gm.value(subject=neworder, predicate=ECSDI.Direccion_Envio)
         priority = gm.value(subject=neworder, predicate=ECSDI.Prioridad_Entrega)
+        total_price = gm.value(subject=neworder, predicate=ECSDI.Precio_total_pedido)
         gNewOrder.add((order, RDF.type, ECSDI.Pedido))
         gNewOrder.add((order, ECSDI.Ciudad_Destino, Literal(city, datatype=XSD.string)))
         gNewOrder.add((order, ECSDI.Prioridad_Entrega, Literal(priority, datatype=XSD.string)))
+        gNewOrder.add((order, ECSDI.Precio_toatl_pedido, Literal(total_price, datatype=XSD.float)))
     
+    total_weight = 0
     for product in gm.subjects(RDF.type, ECSDI.Producto):
         name = gm.value(subject=product, predicate=ECSDI.Nombre)
         brand = gm.value(subject=product, predicate=ECSDI.Marca)
         prod_type = gm.value(subject=product, predicate=ECSDI.Tipo)
         price = gm.value(subject=product, predicate=ECSDI.Precio)
         weight = gm.value(subject=product, predicate=ECSDI.Peso)
+        total_weight += weight.toPython()
         gNewOrder.add((product, RDF.type, ECSDI.Producto))
         gNewOrder.add((product, ECSDI.Nombre, Literal(name, datatype=XSD.string)))
         gNewOrder.add((product, ECSDI.Marca, Literal(brand, datatype=XSD.string)))
@@ -382,10 +378,12 @@ def recordNewOrder(gm):
         gNewOrder.add((product, ECSDI.Peso, Literal(weight, datatype=XSD.integer)))
         gNewOrder.add((order, ECSDI.Productos_Pedido, product))
     
+    gNewOrder.add((order, ECSDI.Peso_total_pedido, Literal(total_weight, datatype=XSD.integer)))
+    
     for s, p, o in gNewOrder:
         ordersGraph.add((s, p, o))
     
-    ordersGraph.serialize(destination='../data/orders', format='turtle')
+    ordersGraph.serialize(destination='../Data/orders', format='turtle')
 
     return gNewOrder
 
