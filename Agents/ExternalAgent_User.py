@@ -233,7 +233,6 @@ def browser_search():
 
             # Buscar a l'agent Processar Compra i demanar buscar productes, assignar els productes a la products_list
             venedor = get_agent_info(agn.SalesProcessorAgent)
-
             ProductsGr = send_message_to_agent(gr, venedor, content)
 
             index = 0
@@ -369,11 +368,33 @@ def browser_return():
 
     elif request.method == 'POST':
         logger.info("Enviando peticion de devolucion.")
-        prod = []
         index = request.form['submit']
-        prod.append(products_comprados[int(index)])
+        prod = products_comprados[int(index)]
+
+        # content of message
+        content = ECSDI['Devolver_Producto_' + str(mss_cnt)]
+
+        gr = Graph()
+        gr.add((content, RDF.type, ECSDI.Devolver_Producto))
+
+        reason = request.form.get('reason')
+        gr.add((content, ECSDI.Motivo, Literal(reason, datatype=XSD.string)))
+
+        subject_product = prod['url']
+        gr.add((subject_product, ECSDI.Marca, Literal(prod['marca'], datatype=XSD.string)))
+        gr.add((subject_product, ECSDI.Nombre, Literal(prod['nombre'], datatype=XSD.string)))
+        gr.add((subject_product, ECSDI.Peso, Literal(prod['peso'], datatype=XSD.integer)))
+        gr.add((subject_product, ECSDI.Precio, Literal(prod['precio'], datatype=XSD.float)))
+        gr.add((subject_product, ECSDI.Tipo, Literal(prod['tipo'], datatype=XSD.string)))
+        gr.add((content, ECSDI.Producto_a_Devolver, URIRef(subject_product)))
+
+        # Buscar l'agent Procesar Compra i enviar peticio de devolucion
+        venedor = get_agent_info(agn.SalesProcessorAgent)
+        ProductsGr = send_message_to_agent(gr, venedor, content)
+
+        # agafar la informacio de si ha estat acceptada la devolucio i missatge de devolucio
         
-        return render_template('return.html', products=prod, returnCompleted=True)
+        return render_template('return.html', products=[prod], returnCompleted=True)
 
 
 @app.route("/Stop")

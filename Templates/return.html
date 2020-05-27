@@ -16,16 +16,18 @@
     </div>
     <br>
 
-    {% if not returnCompleted %}
-        <label>Motivo de devolución</label>
-        <select name="reason">
-            <option>Defectuoso</option>
-            <option>Erróneo</option>
-            <option>No satisfactorio</option>
-        </select>
-    {% endif %}
-    
     <form method="POST">
+        {% if not returnCompleted %}
+            <label>Motivo de devolución</label>
+            <select name="reason">
+                <option value="defective">Defectuoso</option>
+                <option value="wrong">Erróneo</option>
+                <option value="unsatisfactory">Insatisfactorio</option>
+            </select>
+            <br>
+            <br>
+        {% endif %}
+    
         <table>
             {% if returnCompleted %}
                 Producto devuelto:
