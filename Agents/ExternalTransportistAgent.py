@@ -143,6 +143,7 @@ def make_proposal(gm, content, send_to):
 
     g = build_message(g, ACL.propose, sender=ExternalTransportAgent.uri, msgcnt=mss_cnt, receiver=send_to,  )
     
+    return g
     logger.info("We are sending a proposal. Weight of the package: " + str(peso) + "Limit: " + str(entrega) + " and price: " + str(precio) + "." )
 
 
