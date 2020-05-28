@@ -6,9 +6,11 @@
 <body>
 
     {% if returnCompleted %}
-        <h2>Producto devuelto exitosamente!</h2>
+        <h2> ¡Producto devuelto exitosamente! </h2>
+    {% elif msg and not returnCompleted %}
+        <h2> ¡Vaya! Parece que algo ha ido mal... </h2>
     {% else %}
-        <h2>Selecciona el producto a devolver</h2>
+        <h2> Selecciona el producto a devolver </h2>
     {% endif %}
 
     <div>
