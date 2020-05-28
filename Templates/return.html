@@ -8,7 +8,7 @@
     {% if returnCompleted %}
         <h2>Producto devuelto exitosamente!</h2>
     {% else %}
-        <h2>Selecciona el producto a devolver.</h2>
+        <h2>Selecciona el producto a devolver</h2>
     {% endif %}
 
     <div>
@@ -25,7 +25,9 @@
                 <option value="unsatisfactory">Insatisfactorio</option>
             </select>
             <br>
-            <br>
+            <p style="color: red"> {{ msg }}</p>
+        {% else %}
+            <p> {{ msg }}</p>
         {% endif %}
     
         <table>

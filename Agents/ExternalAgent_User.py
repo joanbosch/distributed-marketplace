@@ -2,7 +2,7 @@
 """
 filename: ExternalUserAgent
 
-Agente que busca en el directorio y llama al agente obtenido (agente SalesProcessor)
+Agente que busca en el directorio y llama al agente obtenido (agente SaleProcessor)
 Agente que implementa la interaccion con el usuario
 
 @author: javier
@@ -390,12 +390,17 @@ def browser_return():
 
         # Buscar l'agent Procesar Compra i enviar peticio de devolucion
         venedor = get_agent_info(agn.SalesProcessorAgent)
-        ProductsGr = send_message_to_agent(gr, venedor, content)
+        respuesta = send_message_to_agent(gr, venedor, content)
 
         # agafar la informacio de si ha estat acceptada la devolucio i missatge de devolucio
+        subject_dev = respuesta.subjects(RDF.type, ECSDI.Estado_Devolucion)
+        estado_devolucion = bool(respuesta.value(subject=subject_dev, predicate=ECSDI.Devolucion_Aceptada))        
+        mensaje = str(respuesta.value(subject=subject_dev, predicate=ECSDI.Mensaje_Devolucion))
         
-        return render_template('return.html', products=[prod], returnCompleted=True)
-
+        if estado_devolucion:
+            return render_template('return.html', products=[prod], returnCompleted=estado_devolucion, msg=mensaje)
+        else:
+            return render_template('return.html', products=products_comprados, returnCompleted=estado_devolucion, msg=mensaje)
 
 @app.route("/Stop")
 def stop():
@@ -450,11 +455,11 @@ def get_purchases():
     for product in g.subjects(RDF.type, ECSDI.Producto):
         prod  = {}
         prod['url'] = product
-        prod['nombre'] = (str(g.value(subject=product, predicate=ECSDI.Nombre)))
-        prod['marca'] = (str(g.value(subject=product, predicate=ECSDI.Marca)))
-        prod['tipo'] = (str(g.value(subject=product, predicate=ECSDI.Tipo)))
-        prod['precio'] = (str(g.value(subject=product, predicate=ECSDI.Precio)))
-        prod['peso'] = (str(g.value(subject=product, predicate=ECSDI.Peso)))
+        prod['nombre'] = str(g.value(subject=product, predicate=ECSDI.Nombre))
+        prod['marca'] = str(g.value(subject=product, predicate=ECSDI.Marca))
+        prod['tipo'] = str(g.value(subject=product, predicate=ECSDI.Tipo))
+        prod['precio'] = float(g.value(subject=product, predicate=ECSDI.Precio))
+        prod['peso'] = int(g.value(subject=product, predicate=ECSDI.Peso))
         purchases.append(prod)
 
     return purchases
