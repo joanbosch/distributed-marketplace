@@ -22,6 +22,7 @@ from AgentUtil.FlaskServer import shutdown_server
 from AgentUtil.ACLMessages import build_message, send_message, get_message_properties
 from AgentUtil.Agent import Agent
 from AgentUtil.Logging import config_logger
+import datetime
 
 __author__ = 'javier'
 
@@ -335,15 +336,21 @@ def browser_buy():
             Respuesta = send_message_to_agent(gr, venedor, content)
 
             # Guardamos la compra en nuestra bbdd, para que asi saber que productos puede el usuario devolver
-            saveNewOrder(gr)
-            
+            saveNewOrder(Respuesta)
+
+            # cogemos la informacion que nos interesa
+            subject_pedido = Respuesta.subjects(RDF.type, ECSDI.Compra_Realizada)
+            fecha = datetime.datetime.strptime(Respuesta.value(subject=subject_pedido, predicate=ECSDI.Fecha_Entrega))
+            fecha_entrega = fecha.strftime("%d/%m/%Y")
+            precio_envio = float(Respuesta.value(subject=subject_pedido, predicate=ECSDI.Precio_envio))
+
             products_bought = products_selected
             price_sale = total_price
             numProdCarrito = 0
             products_selected = []
             total_price = 0
 
-            return render_template('buy.html', products=products_bought, saleCompleted=True, precio_total=price_sale)
+            return render_template('buy.html', products=products_bought, saleCompleted=True, precio_total=price_sale, precio_trans=precio_envio, fecha_entr=fecha_entrega)
         else:
             logger.info("Eliminando producto del carrito de compra.")
 
@@ -354,6 +361,7 @@ def browser_buy():
             numProdCarrito -= 1
 
             return render_template('buy.html', products=products_selected, saleCompleted=None, precio_total=total_price)
+
 
 @app.route("/return", methods=['GET', 'POST'])
 def browser_return():
@@ -381,6 +389,7 @@ def browser_return():
         gr.add((content, ECSDI.Motivo, Literal(reason, datatype=XSD.string)))
 
         subject_product = prod['url']
+        gr.add((subject_product, RDF.type, ECSDI.Producto))
         gr.add((subject_product, ECSDI.Marca, Literal(prod['marca'], datatype=XSD.string)))
         gr.add((subject_product, ECSDI.Nombre, Literal(prod['nombre'], datatype=XSD.string)))
         gr.add((subject_product, ECSDI.Peso, Literal(prod['peso'], datatype=XSD.integer)))
