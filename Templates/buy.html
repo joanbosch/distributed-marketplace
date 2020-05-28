@@ -49,8 +49,16 @@
                 <td></td>
                 <td></td>
                 <td><strong>TOTAL</strong></td>
-                <td>{{ precio_total }}</td>
+                <td>{{ precio_total }} €</td>
             </tr>
+            {% if saleCompleted %}
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td><strong>ENVIO</strong></td>
+                    <td>{{ precio_trans }} €</td>
+                </tr>
+            {% endif %}
         </table>
     </form>
     
@@ -73,6 +81,8 @@
             <button type="submit" name="submit" value="buy"> Confirmar Compra </button>
         
         </form>
+    {% else %}
+        <p>Fecha prevista de entrega: {{ fecha_entr }}</p>
     {% endif %}
 
 </body>
