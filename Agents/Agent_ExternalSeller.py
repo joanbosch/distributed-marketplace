@@ -149,8 +149,6 @@ def is_external_seller(name):
     g = Graph()
     g.parse(open('../Data/external_sellers'), format='turtle')
 
-    sellers = []
-
     for seller in g.subjects(RDF.type, ECSDI.Vendedor_externo):
         nombre = (str(g.value(subject=seller, predicate=ECSDI.Nombre)))
         if name == nombre:
@@ -170,10 +168,62 @@ def register_external_seller(gm, content):
     subjectSeller = ECSDI['Vendedor_externo_'+ str(random.randint(1, sys.float_info.max))]
 
     new_seller.add((subjectSeller, RDF.type, ECSDI.Vendedor_Externo))
-    new_seller.add((subjectSeller, ECSDI.Nombre,Literal(name, datatype=XDS.string)))
+    new_seller.add((subjectSeller, ECSDI.Nombre,Literal(name, datatype=XSD.string)))
 
     new_seller.serialize(destination='../Data/external_sellers', format='turtle')
 
+def get_agent_info(type):
+    """
+    Busca en el servicio de registro mandando un
+    mensaje de request con una accion Search del servicio de directorio
+    :param type:
+    :return:
+    """
+    global mss_cnt
+    logger.info('Buscamos en el servicio de registro')
+
+    gmess = Graph()
+
+    gmess.bind('foaf', FOAF)
+    gmess.bind('dso', DSO)
+    reg_obj = agn[ExternalSellerAgent.name + '-search']
+    gmess.add((reg_obj, RDF.type, DSO.Search))
+    gmess.add((reg_obj, DSO.AgentType, type))
+
+    msg = build_message(gmess, perf=ACL.request,
+                        sender=ExternalSellerAgent.uri,
+                        receiver=DirectoryAgent.uri,
+                        content=reg_obj,
+                        msgcnt=mss_cnt)
+    gr = send_message(msg, DirectoryAgent.address)
+    mss_cnt += 1
+    logger.info('Recibimos informacion del agente')
+
+    dic = get_message_properties(gr)
+    content = dic['content']
+    address = gr.value(subject=content, predicate=DSO.Address)
+    url = gr.value(subject=content, predicate=DSO.Uri)
+    name = gr.value(subject=content, predicate=FOAF.name)
+
+    return Agent(name, url, address, None)
+
+def send_message_to_agent(gmess, ragn, contentRes):
+    """
+    Envia una accion a un agente de informacion
+    """
+    global mss_cnt
+    logger.info('Hacemos una peticion al servicio de informacion')
+
+    msg = build_message(gmess, perf=ACL.request,
+                        sender=ExternalSellerAgent.uri,
+                        receiver=ragn.uri,
+                        msgcnt=mss_cnt,
+                        content=contentRes)
+    gr = send_message(msg, ragn.address)
+    mss_cnt += 1
+    logger.info('Recibimos respuesta a la peticion al servicio de informacion')
+
+    return gr
     
 @app.route("/comm")
 def comunicacion():
@@ -225,7 +275,12 @@ def comunicacion():
                     nombre = gm.objects(content, ECSDI.Nombre_Tienda)
                     if is_external_seller(nombre):
 
-                        gr = build_message(Graph(),
+                        subject = ECSDI['Responder_Acuerdo_Tienda'+str(mss_cnt)]
+                        g = Graph()
+                        g.add((subject, RDF.type, ECSDI.Responder_Acuerdo_Tienda))
+                        g.add((subject, ECSDI.Resolucion_Acuerdo, Literal("Se ha registrado el vendedor externo.", datatype=XSD.String)))
+                        
+                        gr = build_message(g,
                         ACL['agree'],
                         sender=ExternalSellerAgent.uri,
                         msgcnt=mss_cnt,
@@ -234,7 +289,12 @@ def comunicacion():
                     else:
                         register_external_seller(gm, content)
 
-                        gr = build_message(Graph(),
+                        subject = ECSDI['Responder_Acuerdo_Tienda'+str(mss_cnt)]
+                        g = Graph()
+                        g.add((subject, RDF.type, ECSDI.Responder_Acuerdo_Tienda))
+                        g.add((subject, ECSDI.Resolucion_Acuerdo, Literal("Se ha registrado el vendedor externo.", datatype=XSD.String)))
+
+                        gr = build_message(g,
                         ACL['accept-proposal'],
                         sender=ExternalSellerAgent.uri,
                         msgcnt=mss_cnt,
@@ -249,22 +309,34 @@ def comunicacion():
                     
                     nombre = gm.objects(content, ECSDI.Nombre_Tienda)
                     if is_external_seller(nombre):
-                        gr = build_message(Graph(),
+                        
+                        # Pedir al centro logistico que registre un nuevo producto.
+                        g = Graph()
+
+
+                        venedor = get_agent_info(agn.SalesProcessorAgent)
+                        respuesta = send_message_to_agent(,venedor,content)
+
+                        g = Graph()
+                        g.add((content, RDF.type, ECSDI.Producto_Resgitrado))
+                        g.add((content, ECSDI.Estado_registro, Literal("Se ha registrado el nuevo producto externo", datatype=XSD.String)))
+
+                        gr = build_message(g,
                         ACL['agree'],
                         sender=ExternalSellerAgent.uri,
                         msgcnt=mss_cnt,
                         receiver=msgdic['sender'])
 
                     else:
+                        g = Graph()
+                        g.add((content, RDF.type, ECSDI.Producto_Resgitrado))
+                        g.add((content, ECSDI.Estado_registro, Literal("El vendedor no tiene permisos para registrar productos.", datatype=XSD.String)))
+
                         gr = build_message(Graph(),
                         ACL['refuse'],
                         sender=ExternalSellerAgent.uri,
                         msgcnt=mss_cnt,
                         receiver=msgdic['sender'])
-
-
-                elif accion == ECSDI.Producto_Registrado:
-                    # We only have to reponse to the External Seller with the response of the Sales Processor.
 
                 else:
                     gr = build_message(Graph(),
@@ -314,7 +386,7 @@ def agentbehavior1(cola):
     #Registramos el agente
     gr = register_message()
 
-def get_agent_info(type_, directory_agent, sender, msgcnt):
+'''def get_agent_info(type_, directory_agent, sender, msgcnt):
     gmess = Graph()
     # Construimos el mensaje de registro
     gmess.bind('foaf', FOAF)
@@ -335,7 +407,7 @@ def get_agent_info(type_, directory_agent, sender, msgcnt):
     url = gr.value(subject=content, predicate=DSO.Uri)
     name = gr.value(subject=content, predicate=FOAF.name)
 
-    return Agent(name, url, address, None)
+    return Agent(name, url, address, None)'''
 
 
 if __name__ == '__main__':
