@@ -388,6 +388,7 @@ def browser_return():
         reason = request.form.get('reason')
         gr.add((content, ECSDI.Motivo, Literal(reason, datatype=XSD.string)))
 
+        gr.add((content, ECSDI.Pertenece_A_Pedido, Literal(prod['pedido'], datatype=XSD.string)))
         subject_product = prod['url']
         gr.add((subject_product, RDF.type, ECSDI.Producto))
         gr.add((subject_product, ECSDI.Marca, Literal(prod['marca'], datatype=XSD.string)))
@@ -461,15 +462,17 @@ def get_purchases():
     
     purchases = []
 
-    for product in g.subjects(RDF.type, ECSDI.Producto):
-        prod  = {}
-        prod['url'] = product
-        prod['nombre'] = str(g.value(subject=product, predicate=ECSDI.Nombre))
-        prod['marca'] = str(g.value(subject=product, predicate=ECSDI.Marca))
-        prod['tipo'] = str(g.value(subject=product, predicate=ECSDI.Tipo))
-        prod['precio'] = float(g.value(subject=product, predicate=ECSDI.Precio))
-        prod['peso'] = int(g.value(subject=product, predicate=ECSDI.Peso))
-        purchases.append(prod)
+    for compra in g.subjects(RDF.type, ECSDI.Pedido):
+        for product in g.objects(subject=compra, predicate=ECSDI.Producto_Pedido ):
+            prod  = {}
+            prod['url'] = product
+            prod['nombre'] = str(g.value(subject=product, predicate=ECSDI.Nombre))
+            prod['marca'] = str(g.value(subject=product, predicate=ECSDI.Marca))
+            prod['tipo'] = str(g.value(subject=product, predicate=ECSDI.Tipo))
+            prod['precio'] = float(g.value(subject=product, predicate=ECSDI.Precio))
+            prod['peso'] = int(g.value(subject=product, predicate=ECSDI.Peso))
+            prod['pedido'] = compra
+            purchases.append(prod)
 
     return purchases
 
