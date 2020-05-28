@@ -1,21 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-filename: SimpleDirectoryAgent
-
-Antes de ejecutar hay que añadir la raiz del proyecto a la variable PYTHONPATH
-
-Agente que lleva un registro de otros agentes
-
-Utiliza un registro simple que guarda en un grafo RDF
-
-El registro no es persistente y se mantiene mientras el agente funciona
-
-Las acciones que se pueden usar estan definidas en la ontología
-directory-service-ontology.owl
-
-
-@author: javier
-"""
 
 from multiprocessing import Process, Queue
 import socket
