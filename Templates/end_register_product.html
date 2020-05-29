@@ -4,7 +4,11 @@
     <title>Registro Producto Vendedor Externo</title>
 </head>
 <body>
-    <h1>Registro realizado correctamente</h1>
+    <h1>{% message %}</h1>
+    <br>
+    <div>
+        <p>Resumen producto registrado:</p>
+    </div>
     <br>
     <table cellpadding="5px">
         <tr>
@@ -23,6 +27,6 @@
         </tr>
     </table>
     <br>
-    <a href="{{url_for('browser_externalseller')}}">Volver</a>
+    <a href="{{url_for('browser_externalseller')}}">Registrar otro product</a>
 </body>
 </html>

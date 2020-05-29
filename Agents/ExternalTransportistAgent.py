@@ -1,4 +1,16 @@
 # -*- coding: utf-8 -*-
+"""
+filename: SimplePersonalAgent
+
+Antes de ejecutar hay que añadir la raiz del proyecto a la variable PYTHONPATH
+
+Ejemplo de agente que busca en el directorio y llama al agente obtenido
+
+
+Created on 09/02/2014
+
+@author: javier
+"""
 
 from multiprocessing import Process
 import socket
