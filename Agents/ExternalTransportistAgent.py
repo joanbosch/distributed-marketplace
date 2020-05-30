@@ -18,7 +18,7 @@ import argparse
 import datetime
 
 from flask import Flask, render_template, request
-from rdflib import Graph, Namespace, Literal
+from rdflib import Graph, Namespace, Literal, XSD
 from rdflib.namespace import FOAF, RDF
 import requests
 
@@ -132,27 +132,18 @@ def register_message():
 
 def make_proposal(gm, content, send_to):
     peso = gm.value(subject=content, predicate=ECSDI.Peso)
-    terminio = gm.value(subject=content, predicate=ECSDI.Terminio_maximo_entrega)
-
     entrega = datetime.datetime.now() + datetime.timedelta(days=1)
-
-    # Si no se puede entregar el paquete por el terminio.
-    if entrega > terminio:
-        return build_message(Graph(),
-                ACL.refuse,
-                sender=ExternalTransportAgent.uri,
-                msgcnt=mss_cnt,
-                receiver=send_to, )
-
     precio = peso * randrange(1, 10)
 
     g = Graph()
-    g.bind('ECSDI', ECSDI)
-    p_trans = ECSDI.Precio_Transporte
-    g.add((p_trans, ECSDI.Precio_envio, Literal(precio)))
+    subject = ECSDI['Precio_Transporte'+str(mss_cnt)]
+    g.add((subject, RDF.type, ECSDI.Propuesta_transporte))
+    g.add((subject, ECSDI.Precio_envio, Literal(precio, datatype = XSD.string)))
+    g.add((subject, ECSDI.Fecha_Entrega, Literal(entrega, datatype = XSD.dateTime)))
 
     g = build_message(g, ACL.propose, sender=ExternalTransportAgent.uri, msgcnt=mss_cnt, receiver=send_to,  )
     
+    return g
     logger.info("We are sending a proposal. Weight of the package: " + str(peso) + "Limit: " + str(entrega) + " and price: " + str(precio) + "." )
 
 
