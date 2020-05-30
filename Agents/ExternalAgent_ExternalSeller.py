@@ -276,6 +276,7 @@ def browser_register_product():
              # Obtenemos la respuesta
             subjectGraph = messageGr.subjects(RDF.type, ECSDI.Producto_Registrado)
             for s in subjectGraph:
+                
                 respuesta = str(messageGr.value(subject=s, predicate=ECSDI.Estado_registro))
 
             res = {'marca': brand, 'nom': name, 'model': tipo, 'preu':price, 'peso': weight}

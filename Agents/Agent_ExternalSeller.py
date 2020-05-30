@@ -364,7 +364,7 @@ def comunicacion():
                         respuesta = send_message_to_agent(g,venedor,content)
 
                         g = Graph()
-                        g.add((content, RDF.type, ECSDI.Producto_Resgitrado))
+                        g.add((content, RDF.type, ECSDI.Producto_Registrado))
                         g.add((content, ECSDI.Estado_registro, Literal("Se ha registrado el nuevo producto externo", datatype=XSD.string)))
 
                         gr = build_message(g,
@@ -375,7 +375,7 @@ def comunicacion():
 
                     else:
                         g = Graph()
-                        g.add((content, RDF.type, ECSDI.Producto_Resgitrado))
+                        g.add((content, RDF.type, ECSDI.Producto_Registrado))
                         g.add((content, ECSDI.Estado_registro, Literal("El vendedor no tiene permisos para registrar productos.", datatype=XSD.string)))
 
                         gr = build_message(Graph(),
