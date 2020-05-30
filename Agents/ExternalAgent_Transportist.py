@@ -116,7 +116,7 @@ def register_message():
     gmess.add((reg_obj, DSO.Uri, ExternalTransportAgent.uri))
     gmess.add((reg_obj, FOAF.name, Literal(ExternalTransportAgent.name)))
     gmess.add((reg_obj, DSO.Address, Literal(ExternalTransportAgent.address)))
-    gmess.add((reg_obj, DSO.AgentType, ECSDI.Transportista))
+    gmess.add((reg_obj, DSO.AgentType, agn.ExternalTransportAgent))
 
     # Lo metemos en un envoltorio FIPA-ACL y lo enviamos
     gr = send_message(

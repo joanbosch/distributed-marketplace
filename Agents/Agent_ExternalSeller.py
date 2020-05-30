@@ -330,8 +330,7 @@ def comunicacion():
                             g.add((content, RDF.Type, ECSDI.Nuevo_Producto))
 
                             # New Product
-                            product = ECSDI['Producto_' + str(mss_cnt)]
-                            g.add((product, RDF.type, ECSDI.Producto))
+                            product = ECSDI['Producto_Externo_' + str(mss_cnt)]
                             g.add((product, RDF.type, ECSDI.Producto_externo))
                             g.add((product, ECSDI.Nombre, Literal(nombre_producto, datatype=XSD.string)))
                             g.add((product, ECSDI.Marca, Literal(marca, datatype=XSD.string)))

@@ -340,9 +340,11 @@ def browser_buy():
 
             # cogemos la informacion que nos interesa
             subject_pedido = Respuesta.subjects(RDF.type, ECSDI.Compra_Realizada)
-            fecha = datetime.datetime.strptime(Respuesta.value(subject=subject_pedido, predicate=ECSDI.Fecha_Entrega))
+            for pedid in subject_pedido:
+                fecha  = (Respuesta.value(subject=pedid, predicate=ECSDI.Fecha_Entrega)).toPython()
+
             fecha_entrega = fecha.strftime("%d/%m/%Y")
-            precio_envio = float(Respuesta.value(subject=subject_pedido, predicate=ECSDI.Precio_envio))
+            
 
             products_bought = products_selected
             price_sale = total_price
@@ -350,7 +352,7 @@ def browser_buy():
             products_selected = []
             total_price = 0
 
-            return render_template('buy.html', products=products_bought, saleCompleted=True, precio_total=price_sale, precio_trans=precio_envio, fecha_entr=fecha_entrega)
+            return render_template('buy.html', products=products_bought, saleCompleted=True, precio_total=price_sale, fecha_entr=fecha_entrega)
         else:
             logger.info("Eliminando producto del carrito de compra.")
 

@@ -1,41 +1,192 @@
-@prefix ns1: <http://www.semanticweb.org/joan/ontologies/2020/3/practicaECSDI#> .
+@prefix ECSDI: <http://www.semanticweb.org/joan/ontologies/2020/3/practicaECSDI#> .
+@prefix acl: <http://www.nuin.org/ontology/fipa/acl#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-ns1:Procesar_Compra_2 a ns1:Procesar_Compra ;
-    ns1:Direccion_Envio "Barcelona"^^xsd:string ;
-    ns1:Informacion_Pago "12345"^^xsd:string ;
-    ns1:Lista_Productos_ProcesarCompra ns1:Producto_interno_1,
-        ns1:Producto_interno_3,
-        ns1:Producto_interno_4,
-        ns1:Producto_interno_6 ;
-    ns1:Precio_total_pedido "2332.4"^^xsd:float ;
-    ns1:Prioridad_Entrega "maxima"^^xsd:string .
+acl:message--1716690895348806382-0006 a acl:FipaAclMessage ;
+    acl:content ECSDI:enviar_pedido6 ;
+    acl:performative acl:inform-result,
+        acl:request ;
+    acl:receiver <http://www.agentes.org#ExternalUserAgent>,
+        <http://www.agentes.org#LogisticCenterAgent> ;
+    acl:sender <http://www.agentes.org#SalesProcessorAgent> .
 
-ns1:Producto_interno_1 a ns1:Producto ;
-    ns1:Marca "Apple"^^xsd:string ;
-    ns1:Nombre "iPhone 11"^^xsd:string ;
-    ns1:Peso 1 ;
-    ns1:Precio "809.0"^^xsd:float ;
-    ns1:Tipo "tecnologia"^^xsd:string .
+acl:message--1716690895348806382-0008 a acl:FipaAclMessage ;
+    acl:content ECSDI:enviar_pedido8 ;
+    acl:performative acl:inform-result,
+        acl:request ;
+    acl:receiver <http://www.agentes.org#ExternalUserAgent>,
+        <http://www.agentes.org#LogisticCenterAgent> ;
+    acl:sender <http://www.agentes.org#SalesProcessorAgent> .
 
-ns1:Producto_interno_3 a ns1:Producto ;
-    ns1:Marca "Logitech"^^xsd:string ;
-    ns1:Nombre "Teclado USB"^^xsd:string ;
-    ns1:Peso 1 ;
-    ns1:Precio "18.5"^^xsd:float ;
-    ns1:Tipo "tecnologia"^^xsd:string .
+acl:message--1716690895348806382-0010 a acl:FipaAclMessage ;
+    acl:content ECSDI:enviar_pedido10 ;
+    acl:performative acl:inform-result,
+        acl:request ;
+    acl:receiver <http://www.agentes.org#ExternalUserAgent>,
+        <http://www.agentes.org#LogisticCenterAgent> ;
+    acl:sender <http://www.agentes.org#SalesProcessorAgent> .
 
-ns1:Producto_interno_4 a ns1:Producto ;
-    ns1:Marca "Apple"^^xsd:string ;
-    ns1:Nombre "MacBook Pro 128GB"^^xsd:string ;
-    ns1:Peso 3 ;
-    ns1:Precio "1500.0"^^xsd:float ;
-    ns1:Tipo "tecnologia"^^xsd:string .
+acl:message--1716690895348806382-0011 a acl:FipaAclMessage ;
+    acl:content ECSDI:enviar_pedido11 ;
+    acl:performative acl:inform-result,
+        acl:request ;
+    acl:receiver <http://www.agentes.org#ExternalUserAgent>,
+        <http://www.agentes.org#LogisticCenterAgent> ;
+    acl:sender <http://www.agentes.org#SalesProcessorAgent> .
 
-ns1:Producto_interno_6 a ns1:Producto ;
-    ns1:Marca "Bic"^^xsd:string ;
-    ns1:Nombre "Pack 10 boligrafos azules"^^xsd:string ;
-    ns1:Peso 1 ;
-    ns1:Precio "4.9"^^xsd:float ;
-    ns1:Tipo "papeleria"^^xsd:string .
+acl:message--1716690895348806382-0013 a acl:FipaAclMessage ;
+    acl:content ECSDI:enviar_pedido13 ;
+    acl:performative acl:inform-result,
+        acl:request ;
+    acl:receiver <http://www.agentes.org#ExternalUserAgent>,
+        <http://www.agentes.org#LogisticCenterAgent> ;
+    acl:sender <http://www.agentes.org#SalesProcessorAgent> .
+
+acl:message--1716690895348806382-0015 a acl:FipaAclMessage ;
+    acl:content ECSDI:enviar_pedido15 ;
+    acl:performative acl:inform-result,
+        acl:request ;
+    acl:receiver <http://www.agentes.org#ExternalUserAgent>,
+        <http://www.agentes.org#LogisticCenterAgent> ;
+    acl:sender <http://www.agentes.org#SalesProcessorAgent> .
+
+acl:message--1716690895348806382-0017 a acl:FipaAclMessage ;
+    acl:content ECSDI:enviar_pedido17 ;
+    acl:performative acl:inform-result,
+        acl:request ;
+    acl:receiver <http://www.agentes.org#ExternalUserAgent>,
+        <http://www.agentes.org#LogisticCenterAgent> ;
+    acl:sender <http://www.agentes.org#SalesProcessorAgent> .
+
+ECSDI:compra_realizada10 a ECSDI:Compra_Realizada ;
+    ECSDI:Fecha_Entrega "2020-06-05T18:03:55.343371"^^xsd:dateTime ;
+    ECSDI:Pedido_Procesado ECSDI:pedido10 .
+
+ECSDI:compra_realizada11 a ECSDI:Compra_Realizada ;
+    ECSDI:Fecha_Entrega "2020-06-05T18:04:42.960193"^^xsd:dateTime ;
+    ECSDI:Pedido_Procesado ECSDI:pedido11 .
+
+ECSDI:compra_realizada13 a ECSDI:Compra_Realizada ;
+    ECSDI:Fecha_Entrega "2020-06-05T18:05:46.068702"^^xsd:dateTime ;
+    ECSDI:Pedido_Procesado ECSDI:pedido13 .
+
+ECSDI:compra_realizada15 a ECSDI:Compra_Realizada ;
+    ECSDI:Fecha_Entrega "2020-06-05T18:07:53.589437"^^xsd:dateTime ;
+    ECSDI:Pedido_Procesado ECSDI:pedido15 .
+
+ECSDI:compra_realizada17 a ECSDI:Compra_Realizada ;
+    ECSDI:Fecha_Entrega "2020-06-05T18:10:47.288458"^^xsd:dateTime ;
+    ECSDI:Pedido_Procesado ECSDI:pedido17 .
+
+ECSDI:compra_realizada6 a ECSDI:Compra_Realizada ;
+    ECSDI:Fecha_Entrega "2020-06-05T17:56:38.655082"^^xsd:dateTime ;
+    ECSDI:Pedido_Procesado ECSDI:pedido6 .
+
+ECSDI:compra_realizada8 a ECSDI:Compra_Realizada ;
+    ECSDI:Fecha_Entrega "2020-06-05T18:02:05.439230"^^xsd:dateTime ;
+    ECSDI:Pedido_Procesado ECSDI:pedido8 .
+
+ECSDI:Producto_interno_3 a ECSDI:Producto ;
+    ECSDI:Marca "Logitech"^^xsd:string ;
+    ECSDI:Nombre "Teclado USB"^^xsd:string ;
+    ECSDI:Peso 1 ;
+    ECSDI:Precio "18.5"^^xsd:float ;
+    ECSDI:Tipo "tecnologia"^^xsd:string .
+
+ECSDI:Producto_interno_5 a ECSDI:Producto ;
+    ECSDI:Marca "Nike"^^xsd:string ;
+    ECSDI:Nombre "Zapatillas deportivas Nike"^^xsd:string ;
+    ECSDI:Peso 2 ;
+    ECSDI:Precio "62.25"^^xsd:float ;
+    ECSDI:Tipo "calzado"^^xsd:string .
+
+ECSDI:Producto_interno_6 a ECSDI:Producto ;
+    ECSDI:Marca "Bic"^^xsd:string ;
+    ECSDI:Nombre "Pack 10 boligrafos azules"^^xsd:string ;
+    ECSDI:Peso 1 ;
+    ECSDI:Precio "4.9"^^xsd:float ;
+    ECSDI:Tipo "papeleria"^^xsd:string .
+
+ECSDI:enviar_pedido10 a ECSDI:Enviar_Pedido ;
+    ECSDI:Pedido_A_Enviar ECSDI:pedido10 .
+
+ECSDI:enviar_pedido11 a ECSDI:Enviar_Pedido ;
+    ECSDI:Pedido_A_Enviar ECSDI:pedido11 .
+
+ECSDI:enviar_pedido13 a ECSDI:Enviar_Pedido ;
+    ECSDI:Pedido_A_Enviar ECSDI:pedido13 .
+
+ECSDI:enviar_pedido15 a ECSDI:Enviar_Pedido ;
+    ECSDI:Pedido_A_Enviar ECSDI:pedido15 .
+
+ECSDI:enviar_pedido17 a ECSDI:Enviar_Pedido ;
+    ECSDI:Pedido_A_Enviar ECSDI:pedido17 .
+
+ECSDI:enviar_pedido6 a ECSDI:Enviar_Pedido ;
+    ECSDI:Pedido_A_Enviar ECSDI:pedido6 .
+
+ECSDI:enviar_pedido8 a ECSDI:Enviar_Pedido ;
+    ECSDI:Pedido_A_Enviar ECSDI:pedido8 .
+
+ECSDI:pedido10 a ECSDI:Pedido ;
+    ECSDI:Ciudad_Destino "Barcelona"^^xsd:string ;
+    ECSDI:Fecha_Pedido "2020-05-30T18:03:55.343371"^^xsd:dateTime ;
+    ECSDI:Peso_total_pedido 3 ;
+    ECSDI:Precio_toatl_pedido "1500.0"^^xsd:float ;
+    ECSDI:Prioridad_Entrega "normal"^^xsd:string ;
+    ECSDI:Productos_Pedido ECSDI:Producto_interno_4 .
+
+ECSDI:pedido11 a ECSDI:Pedido ;
+    ECSDI:Ciudad_Destino "Barcelona"^^xsd:string ;
+    ECSDI:Fecha_Pedido "2020-05-30T18:04:42.960193"^^xsd:dateTime ;
+    ECSDI:Peso_total_pedido 0 ;
+    ECSDI:Precio_toatl_pedido "0.0"^^xsd:float ;
+    ECSDI:Prioridad_Entrega "normal"^^xsd:string .
+
+ECSDI:pedido13 a ECSDI:Pedido ;
+    ECSDI:Ciudad_Destino "Barcelona"^^xsd:string ;
+    ECSDI:Fecha_Pedido "2020-05-30T18:05:46.068702"^^xsd:dateTime ;
+    ECSDI:Peso_total_pedido 2 ;
+    ECSDI:Precio_toatl_pedido "62.25"^^xsd:float ;
+    ECSDI:Prioridad_Entrega "normal"^^xsd:string ;
+    ECSDI:Productos_Pedido ECSDI:Producto_interno_5 .
+
+ECSDI:pedido15 a ECSDI:Pedido ;
+    ECSDI:Ciudad_Destino "Barcelona"^^xsd:string ;
+    ECSDI:Fecha_Pedido "2020-05-30T18:07:53.589437"^^xsd:dateTime ;
+    ECSDI:Peso_total_pedido 1 ;
+    ECSDI:Precio_toatl_pedido "4.9"^^xsd:float ;
+    ECSDI:Prioridad_Entrega "normal"^^xsd:string ;
+    ECSDI:Productos_Pedido ECSDI:Producto_interno_6 .
+
+ECSDI:pedido17 a ECSDI:Pedido ;
+    ECSDI:Ciudad_Destino "Barcelona"^^xsd:string ;
+    ECSDI:Fecha_Pedido "2020-05-30T18:10:47.288458"^^xsd:dateTime ;
+    ECSDI:Peso_total_pedido 3 ;
+    ECSDI:Precio_toatl_pedido "1500.0"^^xsd:float ;
+    ECSDI:Prioridad_Entrega "normal"^^xsd:string ;
+    ECSDI:Productos_Pedido ECSDI:Producto_interno_4 .
+
+ECSDI:pedido6 a ECSDI:Pedido ;
+    ECSDI:Ciudad_Destino "Barcelona"^^xsd:string ;
+    ECSDI:Fecha_Pedido "2020-05-30T17:56:38.655082"^^xsd:dateTime ;
+    ECSDI:Peso_total_pedido 3 ;
+    ECSDI:Precio_toatl_pedido "1500.0"^^xsd:float ;
+    ECSDI:Prioridad_Entrega "normal"^^xsd:string ;
+    ECSDI:Productos_Pedido ECSDI:Producto_interno_4 .
+
+ECSDI:pedido8 a ECSDI:Pedido ;
+    ECSDI:Ciudad_Destino "Barcelona"^^xsd:string ;
+    ECSDI:Fecha_Pedido "2020-05-30T18:02:05.439230"^^xsd:dateTime ;
+    ECSDI:Peso_total_pedido 1 ;
+    ECSDI:Precio_toatl_pedido "18.5"^^xsd:float ;
+    ECSDI:Prioridad_Entrega "normal"^^xsd:string ;
+    ECSDI:Productos_Pedido ECSDI:Producto_interno_3 .
+
+ECSDI:Producto_interno_4 a ECSDI:Producto ;
+    ECSDI:Marca "Apple"^^xsd:string ;
+    ECSDI:Nombre "MacBook Pro 128GB"^^xsd:string ;
+    ECSDI:Peso 3 ;
+    ECSDI:Precio "1500.0"^^xsd:float ;
+    ECSDI:Tipo "tecnologia"^^xsd:string .
 

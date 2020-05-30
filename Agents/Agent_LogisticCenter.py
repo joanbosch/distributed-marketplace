@@ -8,7 +8,7 @@
 from multiprocessing import Process, Queue
 import socket
 import argparse
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import Flask, render_template, request
 from rdflib import Graph, Namespace, Literal, XSD, URIRef
@@ -110,7 +110,7 @@ def register_message():
     gmess.add((reg_obj, DSO.Uri, LogisticCenterAgent.uri))
     gmess.add((reg_obj, FOAF.name, Literal(LogisticCenterAgent.name)))
     gmess.add((reg_obj, DSO.Address, Literal(LogisticCenterAgent.address)))
-    gmess.add((reg_obj, DSO.AgentType, ECSDI.Centro_Logistico))
+    gmess.add((reg_obj, DSO.AgentType, agn.LogisticCenterAgent))
 
     # Lo metemos en un envoltorio FIPA-ACL y lo enviamos
     gr = send_message(
@@ -179,6 +179,11 @@ def comunicacion():
 
                 # Enviamos
                 createSend()
+            gr =build_message(Graph(), 
+                    perf = ACL['inform-done'], 
+                    sender = LogisticCenterAgent.uri, 
+                    receiver = msgdic['sender'],
+                    msgcnt = mss_cnt)
 
         elif perf == ACL['proposal']:
 
@@ -189,25 +194,29 @@ def comunicacion():
             if precio < 100:
                 logger.info('Aceptamos el precio propuesto por el transportista')
 
-                gr = send_message(
-                    build_message(gr, 
+                gr =build_message(Graph(), 
                     perf = ACL['accept-proposal'], 
                     sender = LogisticCenterAgent.uri, 
                     receiver = msgdic['sender'],
-                    msgcnt = mss_cnt), msgdic['sender'])
+                    msgcnt = mss_cnt)
             else:
                 logger.info('No aceptamos el precio propuesto por el transportista')
 
-                gr = send_message(
-                    build_message(gr, 
+                gr =build_message(Graph(), 
                     perf = ACL['reject-proposal'], 
                     sender = LogisticCenterAgent.uri, 
                     receiver = msgdic['sender'],
-                    msgcnt = mss_cnt), msgdic['sender'])
+                    msgcnt = mss_cnt)
 
         elif perf == ACL['refuse']:
             #enviar a un altre transportista el envio que o sha pogut enviar
             logger.info('Buscamos otro transportista que pueda realizar el envio')
+    
+    mss_cnt += 1
+
+    logger.info('Respondemos a la peticion')
+    
+    return gr.serialize(format='xml')
 
 def tidyup():
     """
@@ -298,7 +307,7 @@ def createSend():
             city = lotes.value(subject=pedido, predicate=ECSDI.Ciudad_Destino)
             priority = lotes.value(subject=pedido, predicate=ECSDI.Prioridad_Entrega)
             peso = lotes.value(subject=pedido, predicate=ECSDI.Peso_total_pedido)
-            date = createDate(datetime.datetime.utcnow() + datetime.timedelta(days=2))
+            date = datetime.now() + timedelta(days=2)
             if priority == 'maxima':
 
                 gr = Graph()
@@ -325,7 +334,7 @@ def createSend():
             city = lotes.value(subject=pedido, predicate=ECSDI.Ciudad_Destino)
             priority = lotes.value(subject=pedido, predicate=ECSDI.Prioridad_Entrega)
             peso = lotes.value(subject=pedido, predicate=ECSDI.Peso_total_pedido)
-            date = createDate(datetime.datetime.utcnow() + datetime.timedelta(days=5))
+            date = datetime.now() + timedelta(days=5)
             if priority == 'normal':
 
                 gr = Graph()

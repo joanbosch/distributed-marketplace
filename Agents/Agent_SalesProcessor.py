@@ -423,7 +423,7 @@ def assignToLogisticCenter(gr):
         
     gr.add((content, ECSDI.Pedido_A_Enviar, order))
 
-    logistic = get_agent_info(ECSDI.Centro_Logistico, DirectoryAgent, SalesProcessorAgent, mss_cnt)
+    logistic = get_agent_info(agn.LogisticCenterAgent, DirectoryAgent, SalesProcessorAgent, mss_cnt)
 
     gr = send_message(
         build_message(gr, perf=ACL.request, sender=SalesProcessorAgent.uri, receiver=logistic.uri, msgcnt=mss_cnt, content=content),
