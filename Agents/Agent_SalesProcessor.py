@@ -8,6 +8,7 @@ Asume que el agente de registro esta en el puerto 9000
 """
 
 from multiprocessing import Process, Queue
+from datetime import datetime, timedelta
 import argparse
 import socket
 import sys
@@ -211,11 +212,31 @@ def comunicacion():
                     logger.info('Asignamos envio a centro logistico')
                     assignToLogisticCenter(gOrder)
 
-                    gr = build_message(Graph(),
-                        ACL['inform-done'],
+                    compra_realizada = ECSDI['compra_realizada' + str(mss_cnt)]
+                    gOrder.add((compra_realizada, RDF.type, ECSDI.Compra_Realizada))
+
+                    subjectsFound = gOrder.subjects(predicate=RDF.type, object=ECSDI.Pedido)
+                    for s in subjectsFound:
+                        order = s
+                    gOrder.add((compra_realizada, ECSDI.Pedido_Procesado, order))
+
+                    date = gOrder.value(subject=order, predicate=ECSDI.Fecha_Pedido)
+                    priority = gOrder.value(subject=order, predicate=ECSDI.Prioridad_Entrega)
+                    if str(priority) == 'maxima':
+                        delivery_date = date.toPython() + timedelta(days=2)
+                    else:
+                        delivery_date = date.toPython() + timedelta(days=6)
+                    gOrder.add((compra_realizada, ECSDI.Fecha_Entrega, Literal(delivery_date, datatype=XSD.dateTime)))
+
+                    gr = build_message(gOrder,
+                        ACL['inform-result'],
                         sender=SalesProcessorAgent.uri,
                         msgcnt=mss_cnt,
                         receiver=msgdic['sender'])
+
+                # Return product action
+
+                # Register new external product action
 
                 else:
                     gr = build_message(Graph(),
@@ -355,12 +376,14 @@ def recordNewOrder(gm):
     # There is only one order in a 'Procesar_Compra' message, 'for' only will do one loop
     for neworder in gm.subjects(RDF.type, ECSDI.Procesar_Compra):
         city = gm.value(subject=neworder, predicate=ECSDI.Direccion_Envio)
-        priority = gm.value(subject=neworder, predicate=ECSDI.Prioridad_Entrega)
+        payment = gm.value(subject=neworder, predicate=ECSDI.Informacion_Pago)
         total_price = gm.value(subject=neworder, predicate=ECSDI.Precio_total_pedido)
+        priority = gm.value(subject=neworder, predicate=ECSDI.Prioridad_Entrega)
         gNewOrder.add((order, RDF.type, ECSDI.Pedido))
         gNewOrder.add((order, ECSDI.Ciudad_Destino, Literal(city, datatype=XSD.string)))
-        gNewOrder.add((order, ECSDI.Prioridad_Entrega, Literal(priority, datatype=XSD.string)))
+        gNewOrder.add((order, ECSDI.Fecha_Pedido, Literal(datetime.now(), datatype=XSD.dateTime)))
         gNewOrder.add((order, ECSDI.Precio_toatl_pedido, Literal(total_price, datatype=XSD.float)))
+        gNewOrder.add((order, ECSDI.Prioridad_Entrega, Literal(priority, datatype=XSD.string)))
     
     total_weight = 0
     for product in gm.subjects(RDF.type, ECSDI.Producto):
@@ -406,6 +429,9 @@ def assignToLogisticCenter(gr):
         build_message(gr, perf=ACL.request, sender=SalesProcessorAgent.uri, receiver=logistic.uri, msgcnt=mss_cnt, content=content),
         logistic.address
     )
+
+    # To revove 'enviar_pedido' and reuse the graph later
+    gr.remove((content, None, None))
 
 def get_agent_info(type_, directory_agent, sender, msgcnt):
     gmess = Graph()
