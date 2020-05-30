@@ -67,6 +67,10 @@ agn = Namespace("http://www.agentes.org#")
 # Contador de mensajes
 mss_cnt = 0
 
+# Name Shop and Pay
+nameShop = ""
+pago = "" 
+
 # Datos del Agente
 ExternalAgentOfExternalSeller = Agent('ExternalAgentOfExternalSeller',
                        agn.ExternalAgentOfExternalSeller,
@@ -183,7 +187,8 @@ def browser_externalseller():
 def browser_register_product():
 
     global mss_cnt
-    nameShop = None
+    global nameShop
+    global pago
 
     if request.method == 'GET':
 
@@ -221,7 +226,8 @@ def browser_register_product():
 
              # Obtenemos la respuesta
             subjectGraph = deal_responseGr.subjects(RDF.type, ECSDI.Responder_Acuerdo_Tienda)
-            respuesta = str(deal_responseGr.value(subject=subjectGraph, predicate=ECSDI.Resolucion_Acuerdo))
+            for s in subjectGraph:
+                respuesta = str(deal_responseGr.value(subject=s, predicate=ECSDI.Resolucion_Acuerdo))
 
             return render_template('register_product.html', response=respuesta)
 
@@ -233,7 +239,7 @@ def browser_register_product():
             brand = request.form['brand']
             name = request.form['name']
             price = request.form['price']
-            weight = request.form['weight']
+            weight = request.form['weigth']
             tipo = request.form['tipo']
 
             gr = Graph()
@@ -259,7 +265,7 @@ def browser_register_product():
             gr.add((subjectVendedor, ECSDI.Nombre, Literal(nameShop, datatype=XSD.string)))
             gr.add((subjectVendedor, ECSDI.Forma_pago, Literal(pago, datatype=XSD.string)))
 
-            gr.add((subjectProd, ECSDI.Vendio_por, URIRef(subjectVendedor)))
+            gr.add((subjectProd, ECSDI.Vendido_por, URIRef(subjectVendedor)))
 
             # Obtenemos el Agente (interno) Vendedor Externo
             seller = get_agent_info(agn.ExternalSellerAgent)
@@ -267,9 +273,10 @@ def browser_register_product():
             # Enviamos el producto para que sea registrado
             messageGr = send_message_to_agent(gr, seller, content)
 
-            # Obtenemos la respuesta
+             # Obtenemos la respuesta
             subjectGraph = messageGr.subjects(RDF.type, ECSDI.Producto_Registrado)
-            respuesta = str(messageGr.value(subject=subjectGraph, predicate=ECSDI.Estado_registro))
+            for s in subjectGraph:
+                respuesta = str(messageGr.value(subject=s, predicate=ECSDI.Estado_registro))
 
             res = {'marca': brand, 'nom': name, 'model': tipo, 'preu':price, 'peso': weight}
 

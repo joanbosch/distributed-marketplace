@@ -151,6 +151,7 @@ def is_external_seller(name):
 
     for seller in g.subjects(RDF.type, ECSDI.Vendedor_externo):
         nombre = (str(g.value(subject=seller, predicate=ECSDI.Nombre)))
+        logger.info("Nom que hi ha a la DB: " + nombre)
         if name == nombre:
             return True
     
@@ -161,14 +162,17 @@ def register_external_seller(gm, content):
     new_seller = Graph()
     new_seller.parse(open('../Data/external_sellers'), format='turtle')
 
+    subject = gm.subjects(RDF.type, ECSDI.Vendedor_externo)
     #Obtain the external seller values
-    name = gm.value(subject=content, predicate=ECSDI.Nombre_Tienda)
+    for s in subject:
+        name = gm.value(subject=s, predicate=ECSDI.Nombre)
+        pago = gm.value(subject=s, predicate=ECSDI.Forma_pago)
 
     # External Seller Random number to asign 
-    subjectSeller = ECSDI['Vendedor_externo_'+ str(random.randint(1, sys.float_info.max))]
-
-    new_seller.add((subjectSeller, RDF.type, ECSDI.Vendedor_Externo))
+    subjectSeller = ECSDI['Vendedor_externo_'+ str(random.randint(1, 999))]
+    new_seller.add((subjectSeller, RDF.type, ECSDI.Vendedor_externo))
     new_seller.add((subjectSeller, ECSDI.Nombre,Literal(name, datatype=XSD.string)))
+    new_seller.add((subjectSeller, ECSDI.Forma_pago, Literal(pago, datatype=XSD.string)))
 
     new_seller.serialize(destination='../Data/external_sellers', format='turtle')
 
@@ -271,14 +275,17 @@ def comunicacion():
                     # 3. ¿Decline the access to our shop? 
                     
                     # Response with the action ECSDI.Resolucion_Acuerdo, preformative: accept-proposal/reject-proposal
-
-                    nombre = gm.objects(content, ECSDI.Nombre_Tienda)
+                    subj = gm.subjects(RDF.type, ECSDI.Vendedor_externo)
+                    for s in subj:
+                        nombre = str(gm.value(s, ECSDI.Nombre))
+                    
+                    logger.info("Nom que envia la Clara: "+ nombre)
                     if is_external_seller(nombre):
 
                         subject = ECSDI['Responder_Acuerdo_Tienda'+str(mss_cnt)]
                         g = Graph()
                         g.add((subject, RDF.type, ECSDI.Responder_Acuerdo_Tienda))
-                        g.add((subject, ECSDI.Resolucion_Acuerdo, Literal("Se ha registrado el vendedor externo.", datatype=XSD.String)))
+                        g.add((subject, ECSDI.Resolucion_Acuerdo, Literal("El vendedor externo ya tiene permisos para añadir productos a la tienda.", datatype=XSD.String)))
                         
                         gr = build_message(g,
                         ACL['agree'],
@@ -310,11 +317,13 @@ def comunicacion():
                     nombre = ""
                     forma_pago = ""
 
-                    for ext_sell in gm.subjects(RDF.type, ECSDI.Vendedor_Externo):
-                        nombre = gm.value(subject=ext_sell, predicate=ECSDI.Nombre)
-                        forma_pago = gm.value(subject=ext_sell, predicate=ECSDI.Forma_pago)
+                    for ext_sell in gm.subjects(RDF.type, ECSDI.Vendedor_externo):
+                        nombre = str(gm.value(subject=ext_sell, predicate=ECSDI.Nombre))
+                        forma_pago = str(gm.value(subject=ext_sell, predicate=ECSDI.Forma_pago))
 
+                    logger.info("Nom que em passa la Clara:" + nombre)
                     if is_external_seller(nombre):
+
                         
                         # Pedir al centro logistico que registre un nuevo producto.
                         g = Graph()
@@ -327,7 +336,7 @@ def comunicacion():
                             tipo = gm.value(prod, ECSDI.Tipo)
 
                             content = ECSDI['Nuevo_Producto'+ str(mss_cnt)]
-                            g.add((content, RDF.Type, ECSDI.Nuevo_Producto))
+                            g.add((content, RDF.type, ECSDI.Nuevo_Producto))
 
                             # New Product
                             product = ECSDI['Producto_Externo_' + str(mss_cnt)]
@@ -338,7 +347,7 @@ def comunicacion():
                             g.add((product, ECSDI.Precio, Literal(precio, datatype=XSD.float)))
                             g.add((product, ECSDI.Tipo, Literal(tipo, datatype=XSD.string)))
 
-                            gr.add((content, ECSDI.Producto_a_Registrar, URIRef(product)))
+                            g.add((content, ECSDI.Producto_a_Registrar, URIRef(product)))
 
                             # External Seller
 
@@ -347,15 +356,16 @@ def comunicacion():
                             g.add((extern_seller, ECSDI.Nombre, Literal(nombre, datatype=XSD.string)))
                             g.add((extern_seller, ECSDI.Forma_pago, Literal(forma_pago, datatype=XSD.string)))
 
-                            gr.add((product, ECSDI.Vendio_por, URIRef(extern_seller)))
+                            g.add((product, ECSDI.Vendido_por, URIRef(extern_seller)))
 
+                        logger.info("Vamos a registrar el producto al procesador de compras.")
 
                         venedor = get_agent_info(agn.SalesProcessorAgent)
                         respuesta = send_message_to_agent(g,venedor,content)
 
                         g = Graph()
                         g.add((content, RDF.type, ECSDI.Producto_Resgitrado))
-                        g.add((content, ECSDI.Estado_registro, Literal("Se ha registrado el nuevo producto externo", datatype=XSD.String)))
+                        g.add((content, ECSDI.Estado_registro, Literal("Se ha registrado el nuevo producto externo", datatype=XSD.string)))
 
                         gr = build_message(g,
                         ACL['agree'],
@@ -366,7 +376,7 @@ def comunicacion():
                     else:
                         g = Graph()
                         g.add((content, RDF.type, ECSDI.Producto_Resgitrado))
-                        g.add((content, ECSDI.Estado_registro, Literal("El vendedor no tiene permisos para registrar productos.", datatype=XSD.String)))
+                        g.add((content, ECSDI.Estado_registro, Literal("El vendedor no tiene permisos para registrar productos.", datatype=XSD.string)))
 
                         gr = build_message(Graph(),
                         ACL['refuse'],

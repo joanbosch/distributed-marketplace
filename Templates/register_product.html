@@ -10,7 +10,7 @@
 </div>
 
 <div>
-    <p>{% response %}</p>
+    <p>{{response}}</p>
 </div>
 <br>
 <div>
@@ -20,10 +20,10 @@
 <form method="POST">
     <input type="text" name="name" placeholder="Nombre"/><br>
     <input type="text" name="brand" placeholder="Marca"/><br>
-    <input type="text" name="tipo" placeholder="Modelo"/><br>
+    <input type="text" name="tipo" placeholder="Tipo"/><br>
     <input type="number" name="price" step="0.01" min="0.0" placeholder="Precio"/><br>
     <input type="number" name="weigth" step="0.5" min="0.0" placeholder="Peso"/><br>
-    <input type="submit" value="registrar">
+    <input type="submit" value="registrar" name="submit">
 </form>
 
 </body>
