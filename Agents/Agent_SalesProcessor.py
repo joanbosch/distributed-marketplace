@@ -272,6 +272,7 @@ def comunicacion():
 
                 # Register new external product action
                 elif accion == ECSDI.Nuevo_Producto:
+                    logger.info("Registrando un nuevo producto externo.")
                     result = gm.objects(content, ECSDI.Producto_a_Registrar)
                     for newProduct in result:
                         product = newProduct
@@ -352,7 +353,7 @@ def searchProducts(name=None, brand=None, prod_type=None, min_price=0.0, max_pri
         """
 
     if include_external_prod:
-        query += """{ ?producto rdf:type ecsdi:Producto_exteno }"""
+        query += """{ ?producto rdf:type ecsdi:Producto_externo }"""
         first_prod_class = 1
     if include_internal_prod:
         if first_prod_class == 1:
