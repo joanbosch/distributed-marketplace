@@ -185,7 +185,7 @@ def comunicacion():
             # El transportista nos envia un precio sobre el pedido propuesto enviado
             logger.info('Recibimos el precio ofrecido por el transportista')
             precio = gm.value(subject=msgdic['content'], predicate=ECSDI.Precio_envio)
-            fecha_entrega = gm.value(subject=msgdic['content'], predicate=ECSDI.Fecha_Entrega)
+            # fecha_entrega = gm.value(subject=msgdic['content'], predicate=ECSDI.Fecha_Entrega)
             if precio < 100:
                 logger.info('Aceptamos el precio propuesto por el transportista')
 
@@ -291,13 +291,6 @@ def createSend():
     # Obtenemos los lotes a enviar
     lotes = Graph()
     lotes.parse(open('../Data/lotes'), format='turtle')
-
-
-    #1.Recorer tots els lotes i nar enviant
-    #2.Atributos: Destino, Peso, Fecha Limite
-    #3.Peticion envio a transportistas
-    #4.Eliminamos lote del registro
-
 
     # Miramos todos los lotes a enviar con prioridad maxima
     for lote in lotes.subjects(RDF.type, ECSDI.Lote):
