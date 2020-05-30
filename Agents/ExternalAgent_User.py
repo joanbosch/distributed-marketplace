@@ -236,30 +236,16 @@ def browser_search():
             venedor = get_agent_info(agn.SalesProcessorAgent)
             ProductsGr = send_message_to_agent(gr, venedor, content)
 
-            index = 0
-            subject_pos = {}
             products_list = []
-            for s, p, o in ProductsGr:
-                if s not in subject_pos:
-                    if p != RDF.type and p != ECSDI.Contiene_producto and p != ACL.performative and p != ACL.sender and p != ACL.receiver:
-                        if o != ECSDI.Producto: 
-                            subject_pos[s] = index
-                            products_list.append({})
-                            index += 1
-                if s in subject_pos:
-                    subject_dict = products_list[subject_pos[s]]
-                    subject_dict['url'] = s
-                    if p == ECSDI.Marca:
-                        subject_dict['marca'] = o
-                    elif p == ECSDI.Nombre:
-                        subject_dict['nombre'] = o
-                    elif p == ECSDI.Peso:
-                        subject_dict['peso'] = o
-                    elif p == ECSDI.Precio:
-                        subject_dict['precio'] = o
-                    elif p == ECSDI.Tipo:
-                        subject_dict['tipo'] = o
-                    products_list[subject_pos[s]] = subject_dict
+            for product in ProductsGr.subjects(RDF.type, ECSDI.Producto):
+                prod  = {}
+                prod['url'] = product
+                prod['nombre'] = str(ProductsGr.value(subject=product, predicate=ECSDI.Nombre))
+                prod['marca'] = str(ProductsGr.value(subject=product, predicate=ECSDI.Marca))
+                prod['tipo'] = str(ProductsGr.value(subject=product, predicate=ECSDI.Tipo))
+                prod['precio'] = float(ProductsGr.value(subject=product, predicate=ECSDI.Precio))
+                prod['peso'] = int(ProductsGr.value(subject=product, predicate=ECSDI.Peso))
+                products_list.append(prod)
             
             return render_template('search.html', products=products_list, numCarrito=numProdCarrito)
 
@@ -352,7 +338,7 @@ def browser_buy():
             products_selected = []
             total_price = 0
 
-            return render_template('buy.html', products=products_bought, saleCompleted=True, precio_total=price_sale, fecha_entr=fecha_entrega)
+            return render_template('buy.html', products=products_bought, saleCompleted=True, precio_total=round(price_sale,2), fecha_entr=fecha_entrega)
         else:
             logger.info("Eliminando producto del carrito de compra.")
 
@@ -362,7 +348,7 @@ def browser_buy():
             del products_selected[int(index)]
             numProdCarrito -= 1
 
-            return render_template('buy.html', products=products_selected, saleCompleted=None, precio_total=total_price)
+            return render_template('buy.html', products=products_selected, saleCompleted=None, precio_total=round(total_price,2))
 
 
 @app.route("/return", methods=['GET', 'POST'])
@@ -406,10 +392,13 @@ def browser_return():
 
         # agafar la informacio de si ha estat acceptada la devolucio i missatge de devolucio
         subject_dev = respuesta.subjects(RDF.type, ECSDI.Estado_Devolucion)
-        estado_devolucion = bool(respuesta.value(subject=subject_dev, predicate=ECSDI.Devolucion_Aceptada))        
-        mensaje = str(respuesta.value(subject=subject_dev, predicate=ECSDI.Mensaje_Devolucion))
+        for s in subject_dev:
+            estado_devolucion = bool(respuesta.value(subject=s, predicate=ECSDI.Devolucion_Aceptada))        
+            mensaje = str(respuesta.value(subject=s, predicate=ECSDI.Mensaje_Devolucion))
         
         if estado_devolucion:
+            print(subject_product)
+            removeProduct(subject_product)
             return render_template('return.html', products=[prod], returnCompleted=estado_devolucion, msg=mensaje)
         else:
             return render_template('return.html', products=products_comprados, returnCompleted=estado_devolucion, msg=mensaje)
@@ -453,8 +442,27 @@ def agentbehavior1():
 def saveNewOrder(graf):
     logger.info("Guardando compra a la bbdd.")
 
-    graf.parse(open("../Data/purchases"), format='turtle')
-    graf.serialize(destination='../Data/purchases', format='turtle')
+    # creamos un grafo para guardar solo la información que nos interesa
+    gr = Graph()
+
+    for compra in graf.subjects(RDF.type, ECSDI.Pedido):
+        gr.add((compra, RDF.type, ECSDI.Pedido))
+        for product in graf.objects(subject=compra, predicate=ECSDI.Productos_Pedido):
+            # cogemos la información
+            nombre = str(graf.value(subject=product, predicate=ECSDI.Nombre))
+            marca = str(graf.value(subject=product, predicate=ECSDI.Marca))
+            tipo = str(graf.value(subject=product, predicate=ECSDI.Tipo))
+            precio = float(graf.value(subject=product, predicate=ECSDI.Precio))
+            peso = int(graf.value(subject=product, predicate=ECSDI.Peso))
+            gr.add((product, RDF.type, ECSDI.Producto))
+            gr.add((product, ECSDI.Marca, Literal(marca, datatype=XSD.string)))
+            gr.add((product, ECSDI.Nombre, Literal(nombre, datatype=XSD.string)))
+            gr.add((product, ECSDI.Peso, Literal(peso, datatype=XSD.integer)))
+            gr.add((product, ECSDI.Precio, Literal(precio, datatype=XSD.float)))
+            gr.add((product, ECSDI.Tipo, Literal(tipo, datatype=XSD.string)))
+            gr.add((compra, ECSDI.Productos, URIRef(product)))
+
+    gr.serialize(destination='../Data/purchases', format='turtle')
 
 def get_purchases():
     logger.info("Consiguiendo el historial de compras")
@@ -465,7 +473,7 @@ def get_purchases():
     purchases = []
 
     for compra in g.subjects(RDF.type, ECSDI.Pedido):
-        for product in g.objects(subject=compra, predicate=ECSDI.Producto_Pedido ):
+        for product in g.objects(subject=compra, predicate=ECSDI.Productos ):
             prod  = {}
             prod['url'] = product
             prod['nombre'] = str(g.value(subject=product, predicate=ECSDI.Nombre))
@@ -477,6 +485,22 @@ def get_purchases():
             purchases.append(prod)
 
     return purchases
+
+def removeProduct(url):
+
+    logger.info("Eliminamos el producto devuelto de nuestro historial.")
+
+    g = Graph()
+    g.parse(open('../Data/purchases'), format='turtle')
+
+    # eliminamos el producto
+    g.remove((url, None, None))
+
+    # eliminamos el producto del pedido
+    for s in g.subjects(RDF.type, ECSDI.Pedido):
+        g.remove((s, None, url))
+
+    g.serialize(destination='../Data/purchases', format='turtle')
 
 if __name__ == '__main__':
     # Ponemos en marcha los behaviors
