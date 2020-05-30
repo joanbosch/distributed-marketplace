@@ -14,7 +14,7 @@ import socket
 import sys
 
 from flask import Flask, request
-from rdflib import Namespace, Graph, Literal, XSD
+from rdflib import Namespace, Graph, Literal, URIRef, XSD
 from rdflib.namespace import FOAF, RDF, RDFS
 
 from AgentUtil.ACLMessages import build_message, send_message, get_message_properties
@@ -235,8 +235,62 @@ def comunicacion():
                         receiver=msgdic['sender'])
 
                 # Return product action
+                elif accion == ECSDI.Devolver_Producto:
+                    logger.info('Recibida peticion devolucion')
+                    result = gm.objects(content, ECSDI.Producto_a_Devolver)
+                    motivo = gm.value(content, ECSDI.Motivo)
+                    orderURI = gm.value(content, ECSDI.Pertenece_A_Pedido)
+                    
+                    for r in result:
+                        product = r
+
+                    accepted = analyzeReturnRequest(gm, motivo, product, orderURI)
+
+                    if accepted:
+                        graph_res = Graph()
+                        estado_dev = ECSDI['estado_devolucion' + str(mss_cnt)]
+                        graph_res.add((estado_dev, RDF.type, ECSDI.Estado_Devolucion))
+                        graph_res.add((estado_dev, ECSDI.Devolucion_Aceptada, Literal(True, datatype=XSD.boolean)))
+                        graph_res.add((estado_dev, ECSDI.Mensaje_Devolucion, Literal('El lunes de la próxima semana pasará un mensajero a recoger el producto que ha pedido devolver.', datatype=XSD.string)))
+
+                        gr = build_message(graph_res,
+                        ACL['accept-proposal'],
+                        sender=SalesProcessorAgent.uri,
+                        msgcnt=mss_cnt,
+                        receiver=msgdic['sender'])
+                    else:
+                        estado_dev = ECSDI['estado_devolucion' + str(mss_cnt)]
+                        graph_res.add((estado_dev, RDF.type, ECSDI.Estado_Devolucion))
+                        graph_res.add((estado_dev, ECSDI.Devolucion_Aceptada, Literal(False, datatype=XSD.boolean)))
+                        graph_res.add((estado_dev, ECSDI.Mensaje_Devolucion, Literal('Lo sentimos, su petición de de devolución ha sido denegada.', datatype=XSD.string)))
+
+                        gr = build_message(graph_res,
+                        ACL['reject-proposal'],
+                        sender=SalesProcessorAgent.uri,
+                        msgcnt=mss_cnt,
+                        receiver=msgdic['sender'])
 
                 # Register new external product action
+                elif accion == ECSDI.Nuevo_Producto:
+                    result = gm.objects(content, ECSDI.Producto_a_Registrar)
+                    for newProduct in result:
+                        product = newProduct
+                    
+                    productsFile = open('../Data/products')
+                    productsGraph = Graph()
+                    productsGraph.parse(productsFile, format='turtle')
+
+                    productData = gm.triples((product, None, None))
+                    for s,p,o in productData:
+                        productsGraph.add((s,p,o))
+                    
+                    productsGraph.serialize(destination='../Data/products', format='turtle')
+
+                    gr = build_message(Graph(),
+                        ACL['inform-done'],
+                        sender=SalesProcessorAgent.uri,
+                        msgcnt=mss_cnt,
+                        receiver=msgdic['sender'])
 
                 else:
                     gr = build_message(Graph(),
@@ -432,6 +486,27 @@ def assignToLogisticCenter(gr):
 
     # To revove 'enviar_pedido' and reuse the graph later
     gr.remove((content, None, None))
+
+def analyzeReturnRequest(gm, motivo, product, orderURI):
+    if str(motivo) == 'defective' or str(motivo) == 'wrong':
+        return True
+
+    elif str(motivo) == 'unsatisfactory':
+        ordersFile = open('../Data/orders')
+        ordersGraph = Graph()
+        ordersGraph.parse(ordersFile, format='turtle')
+
+        order = URIRef(orderURI)
+        orderDate = ordersGraph.value(order, ECSDI.Fecha_Pedido)
+        orderPriority = ordersGraph.value(order, ECSDI.Prioridad_Entrega)
+        if str(orderPriority) == 'maxima':
+            deliverTime = timedelta(days=2)
+        else:
+            deliverTime = timedelta(days=6)
+        accept = (datetime.now() <= orderDate.toPython() + deliverTime + timedelta(days=15))
+        return accept
+
+    return False
 
 def get_agent_info(type_, directory_agent, sender, msgcnt):
     gmess = Graph()
