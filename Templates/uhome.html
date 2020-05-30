@@ -4,15 +4,20 @@
     <title>Menu de usuario</title>
 </head>
 <body>
+    <h2>Menu de usuario</h2>
 
 <div>
-    <a href="{{url_for('browser_search')}}"> Buscar Productos </a>
-</div>
+    <a href="{{url_for('browser_search')}}"> Buscar Productos </a> 
+    <br>
+    <br>
 
-<div>
     <a href="{{url_for('browser_return')}}"> Devolver Productos </a>
-</div>
+    <br>
+    <br>
 
+    <p>Numero productos en carrito: {{ numCarrito }}</p>
+    <a href="{{url_for('browser_buy')}}"> Carrito de Compra </a>
+</div>
 
 </body>
 </html>

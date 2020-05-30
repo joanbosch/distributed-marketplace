@@ -326,7 +326,7 @@ def searchProducts(name=None, brand=None, prod_type=None, min_price=0.0, max_pri
     result = Graph()
     result.bind('ECSDI', ECSDI)
 
-    productos_encontrados = ECSDI['productos_encontrados' + mss_cnt]
+    productos_encontrados = ECSDI['productos_encontrados' + str(mss_cnt)]
     result.add((productos_encontrados, RDF.type, ECSDI.Productos_encontrados))
 
     product_count = 0

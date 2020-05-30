@@ -2,7 +2,7 @@
 """
 filename: ExternalUserAgent
 
-Agente que busca en el directorio y llama al agente obtenido (agente SalesProcessor)
+Agente que busca en el directorio y llama al agente obtenido (agente SaleProcessor)
 Agente que implementa la interaccion con el usuario
 
 @author: javier
@@ -22,6 +22,7 @@ from AgentUtil.FlaskServer import shutdown_server
 from AgentUtil.ACLMessages import build_message, send_message, get_message_properties
 from AgentUtil.Agent import Agent
 from AgentUtil.Logging import config_logger
+import datetime
 
 __author__ = 'javier'
 
@@ -75,8 +76,14 @@ products_list = []
 # Productos seleccionados
 products_selected = []
 
+# Productos comprados
+products_comprados = []
+
 # Numero de productos seleccionados para comprar
 numProdCarrito = 0
+
+# precio total de un pedido
+total_price = 0
 
 # Datos del Agente
 ExternalUserAgent = Agent('ExternalUserAgent',
@@ -151,7 +158,8 @@ def send_message_to_agent(gmess, ragn, contentRes):
 # Interface for user. Can choose between Search product and Return Product
 @app.route("/")
 def browser_uhome():
-    return render_template('uhome.html')
+    global numProdCarrito
+    return render_template('uhome.html', numCarrito=numProdCarrito)
 
 # Interface for user to search products and select them to buy them.
 # 2 cases:
@@ -162,7 +170,8 @@ def browser_search():
     global mss_cnt
     global products_list
     global numProdCarrito
-    products_list = []
+    global products_selected
+    global total_price
     if request.method == 'GET':
         return render_template('search.html', products=None, numCarrito=numProdCarrito)
     elif request.method == 'POST':
@@ -180,59 +189,51 @@ def browser_search():
             # Add filters
             name = request.form['name']
             if name:
-                subject_nombre = ECSDI['Filtrar_nombre'+ mss_cnt]
+                subject_nombre = ECSDI['Filtrar_nombre'+ str(mss_cnt)]
                 gr.add((subject_nombre, RDF.type, ECSDI.Filtrar_nombre))
                 gr.add((subject_nombre, ECSDI.Nombre, Literal(name, datatype=XSD.string)))
                 gr.add((content, ECSDI.Usa_filtro, URIRef(subject_nombre)))
-            logger.info("name")  
 
             marca = request.form['brand']
             if marca:
-                subject_marca = ECSDI['Filtrar_marca'+ mss_cnt]
+                subject_marca = ECSDI['Filtrar_marca'+ str(mss_cnt)]
                 gr.add((subject_marca, RDF.type, ECSDI.Filtrar_marca))
                 gr.add((subject_marca, ECSDI.Marca, Literal(marca, datatype=XSD.string)))
                 gr.add((content, ECSDI.Usa_filtro, URIRef(subject_marca)))
-            
-            logger.info("marca")
 
             precio_min = request.form['price_min']
             precio_max = request.form['price_max']
             if precio_min or precio_max:
-                subject_precio = ECSDI['Filtrar_precio'+ mss_cnt]
+                subject_precio = ECSDI['Filtrar_precio'+ str(mss_cnt)]
                 gr.add((subject_precio, RDF.type, ECSDI.Filtrar_precio))
                 if precio_min:
                     gr.add((subject_precio, ECSDI.Precio_minimo, Literal(precio_min, datatype=XSD.float)))
                 if precio_max:
                     gr.add((subject_precio, ECSDI.Precio_maximo, Literal(precio_max, datatype=XSD.float)))
                 gr.add((content, ECSDI.Usa_filtro, URIRef(subject_precio)))
-            logger.info("price")
 
             tipo = request.form['type']
             if tipo:
-                subject_tipo = ECSDI['Filtrar_tipo'+ mss_cnt]
+                subject_tipo = ECSDI['Filtrar_tipo'+ str(mss_cnt)]
                 gr.add((subject_tipo, RDF.type, ECSDI.Filtrar_tipo))
                 gr.add((subject_tipo, ECSDI.Tipo, Literal(tipo, datatype=XSD.string)))
                 gr.add((content, ECSDI.Usa_filtro, URIRef(subject_tipo)))
-            logger.info("type")
 
             vend_externo = request.form.get('externalSeller')
-            logger.info("externalseller")
             vend_tienda = request.form.get('internalSeller')
-            logger.info("internalseller")
             if vend_externo or vend_tienda:
                 subject_vend_ext = ECSDI['Filtrar_vendedores_externos'+ str(mss_cnt)]
                 gr.add((subject_vend_ext, RDF.type, ECSDI.Filtrar_vendedores_externos))
                 if vend_externo:
-                    gr.add((subject_vend_ext, ECSDI.Incluir_productos_externos, Literal(vend_externo, datatype=XSD.boolean)))
+                    gr.add((subject_vend_ext, ECSDI.Incluir_productos_externos, Literal(True, datatype=XSD.boolean)))
                 if vend_tienda:
-                    gr.add((subject_vend_ext, ECSDI.Incluir_productos_tienda, Literal(vend_tienda, datatype=XSD.boolean)))
+                    gr.add((subject_vend_ext, ECSDI.Incluir_productos_tienda, Literal(True, datatype=XSD.boolean)))
                 gr.add((content, ECSDI.Usa_filtro, URIRef(subject_vend_ext)))
+            
             logger.info("Se han aplicado los filtros")
 
             # Buscar a l'agent Processar Compra i demanar buscar productes, assignar els productes a la products_list
             venedor = get_agent_info(agn.SalesProcessorAgent)
-            print(venedor)
-
             ProductsGr = send_message_to_agent(gr, venedor, content)
 
             index = 0
@@ -240,14 +241,15 @@ def browser_search():
             products_list = []
             for s, p, o in ProductsGr:
                 if s not in subject_pos:
-                    subject_pos[s] = index
-                    products_list.append({})
-                    index += 1
+                    if p != RDF.type and p != ECSDI.Contiene_producto and p != ACL.performative and p != ACL.sender and p != ACL.receiver:
+                        if o != ECSDI.Producto: 
+                            subject_pos[s] = index
+                            products_list.append({})
+                            index += 1
                 if s in subject_pos:
                     subject_dict = products_list[subject_pos[s]]
-                    if p == RDF.type:
-                        subject_dict['url'] = s
-                    elif p == ECSDI.Marca:
+                    subject_dict['url'] = s
+                    if p == ECSDI.Marca:
                         subject_dict['marca'] = o
                     elif p == ECSDI.Nombre:
                         subject_dict['nombre'] = o
@@ -269,8 +271,6 @@ def browser_search():
         else:
             logger.info("Añadir producto al carrito de compra.")
 
-            global products_selected
-
             index_item = request.form['submit']
             item_checked = []
             item = products_list[int(index_item)]
@@ -281,6 +281,7 @@ def browser_search():
             item_checked.append(item['precio'])
             item_checked.append(item['tipo'])
             products_selected.append(item)
+            total_price += float(item['precio'])
 
             numProdCarrito += 1
             
@@ -294,15 +295,16 @@ def browser_search():
 def browser_buy():
     global products_selected
     global numProdCarrito
+    global total_price
 
     if request.method == 'GET':
-        return render_template('buy.html', products=products_selected, saleCompleted=None)
+        return render_template('buy.html', products=products_selected, saleCompleted=None, precio_total=total_price)
     elif request.method == 'POST':
         if request.form['submit'] == 'buy':
             logger.info("Enviando peticion de compra.")
             
             # Content of message
-            content = ECSDI['Procesar_Compra_'+mss_cnt]
+            content = ECSDI['Procesar_Compra_' + str(mss_cnt)]
 
             gr = Graph()
             gr.add((content, RDF.type, ECSDI.Procesar_Compra))
@@ -316,51 +318,99 @@ def browser_buy():
             creditcard = request.form['creditcard']
             gr.add((content, ECSDI.Informacion_Pago, Literal(creditcard, datatype=XSD.string)))
 
+            gr.add((content, ECSDI.Precio_total_pedido, Literal(total_price, datatype=XSD.float)))
+
             for prod in products_selected:
-                subject_product = prod[0]
+                subject_product = prod['url']
                 gr.add((subject_product, RDF.type, ECSDI.Producto))
-                gr.add((subject_product, ECSDI.Marca, Literal(prod[1], datatype=XSD.string)))
-                gr.add((subject_product, ECSDI.Nombre, Literal(prod[2], datatype=XSD.string)))
-                gr.add((subject_product, ECSDI.Peso, Literal(prod[3], datatype=XSD.integer)))
-                gr.add((subject_product, ECSDI.Precio, Literal(prod[4], datatype=XSD.float)))
-                gr.add((subject_product, ECSDI.Tipo, Literal(prod[5], datatype=XSD.string)))
+                gr.add((subject_product, ECSDI.Marca, Literal(prod['marca'], datatype=XSD.string)))
+                gr.add((subject_product, ECSDI.Nombre, Literal(prod['nombre'], datatype=XSD.string)))
+                gr.add((subject_product, ECSDI.Peso, Literal(prod['peso'], datatype=XSD.integer)))
+                gr.add((subject_product, ECSDI.Precio, Literal(prod['precio'], datatype=XSD.float)))
+                gr.add((subject_product, ECSDI.Tipo, Literal(prod['tipo'], datatype=XSD.string)))
                 gr.add((content, ECSDI.Lista_Productos_ProcesarCompra, URIRef(subject_product)))
 
             # buscar agente Procesar Compra y enviarle mensaje
-            
             venedor = get_agent_info(agn.SalesProcessorAgent)
 
             Respuesta = send_message_to_agent(gr, venedor, content)
-            
-            return render_template('buy.html', products=products_selected, saleCompleted=True)
+
+            # Guardamos la compra en nuestra bbdd, para que asi saber que productos puede el usuario devolver
+            saveNewOrder(Respuesta)
+
+            # cogemos la informacion que nos interesa
+            subject_pedido = Respuesta.subjects(RDF.type, ECSDI.Compra_Realizada)
+            fecha = datetime.datetime.strptime(Respuesta.value(subject=subject_pedido, predicate=ECSDI.Fecha_Entrega))
+            fecha_entrega = fecha.strftime("%d/%m/%Y")
+            precio_envio = float(Respuesta.value(subject=subject_pedido, predicate=ECSDI.Precio_envio))
+
+            products_bought = products_selected
+            price_sale = total_price
+            numProdCarrito = 0
+            products_selected = []
+            total_price = 0
+
+            return render_template('buy.html', products=products_bought, saleCompleted=True, precio_total=price_sale, precio_trans=precio_envio, fecha_entr=fecha_entrega)
         else:
             logger.info("Eliminando producto del carrito de compra.")
 
             index = request.form['submit']
+            item = products_selected[int(index)]
+            total_price -= float(item['precio'])
             del products_selected[int(index)]
             numProdCarrito -= 1
 
-            return render_template('buy.html', products=products_selected, saleCompleted=None)
+            return render_template('buy.html', products=products_selected, saleCompleted=None, precio_total=total_price)
+
 
 @app.route("/return", methods=['GET', 'POST'])
 def browser_return():
     global mss_cnt
+    global products_comprados
     if request.method == 'GET':
-        logger.info("Conseguimos y mostramos el historial de compra.")
+        logger.info("Mostramos el historial de compra.")
 
-        products_comprados = []
-        # Contactar agente para conseguir el historial de compra.
-        gr = Graph()
+        products_comprados = get_purchases()
 
         return render_template('return.html', products=products_comprados, returnCompleted=None)
 
     elif request.method == 'POST':
         logger.info("Enviando peticion de devolucion.")
+        index = request.form['submit']
+        prod = products_comprados[int(index)]
 
-        products_returned = []
+        # content of message
+        content = ECSDI['Devolver_Producto_' + str(mss_cnt)]
+
+        gr = Graph()
+        gr.add((content, RDF.type, ECSDI.Devolver_Producto))
+
+        reason = request.form.get('reason')
+        gr.add((content, ECSDI.Motivo, Literal(reason, datatype=XSD.string)))
+
+        gr.add((content, ECSDI.Pertenece_A_Pedido, Literal(prod['pedido'], datatype=XSD.string)))
+        subject_product = prod['url']
+        gr.add((subject_product, RDF.type, ECSDI.Producto))
+        gr.add((subject_product, ECSDI.Marca, Literal(prod['marca'], datatype=XSD.string)))
+        gr.add((subject_product, ECSDI.Nombre, Literal(prod['nombre'], datatype=XSD.string)))
+        gr.add((subject_product, ECSDI.Peso, Literal(prod['peso'], datatype=XSD.integer)))
+        gr.add((subject_product, ECSDI.Precio, Literal(prod['precio'], datatype=XSD.float)))
+        gr.add((subject_product, ECSDI.Tipo, Literal(prod['tipo'], datatype=XSD.string)))
+        gr.add((content, ECSDI.Producto_a_Devolver, URIRef(subject_product)))
+
+        # Buscar l'agent Procesar Compra i enviar peticio de devolucion
+        venedor = get_agent_info(agn.SalesProcessorAgent)
+        respuesta = send_message_to_agent(gr, venedor, content)
+
+        # agafar la informacio de si ha estat acceptada la devolucio i missatge de devolucio
+        subject_dev = respuesta.subjects(RDF.type, ECSDI.Estado_Devolucion)
+        estado_devolucion = bool(respuesta.value(subject=subject_dev, predicate=ECSDI.Devolucion_Aceptada))        
+        mensaje = str(respuesta.value(subject=subject_dev, predicate=ECSDI.Mensaje_Devolucion))
         
-        return render_template('return.html', products=products_returned, returnCompleted=True)
-
+        if estado_devolucion:
+            return render_template('return.html', products=[prod], returnCompleted=estado_devolucion, msg=mensaje)
+        else:
+            return render_template('return.html', products=products_comprados, returnCompleted=estado_devolucion, msg=mensaje)
 
 @app.route("/Stop")
 def stop():
@@ -396,6 +446,35 @@ def agentbehavior1():
     # Selfdestruct
     requests.get(ExternalUserAgent.stop)
     """
+
+
+def saveNewOrder(graf):
+    logger.info("Guardando compra a la bbdd.")
+
+    graf.parse(open("../Data/purchases"), format='turtle')
+    graf.serialize(destination='../Data/purchases', format='turtle')
+
+def get_purchases():
+    logger.info("Consiguiendo el historial de compras")
+    
+    g = Graph()
+    g.parse(open('../Data/purchases'), format='turtle')
+    
+    purchases = []
+
+    for compra in g.subjects(RDF.type, ECSDI.Pedido):
+        for product in g.objects(subject=compra, predicate=ECSDI.Producto_Pedido ):
+            prod  = {}
+            prod['url'] = product
+            prod['nombre'] = str(g.value(subject=product, predicate=ECSDI.Nombre))
+            prod['marca'] = str(g.value(subject=product, predicate=ECSDI.Marca))
+            prod['tipo'] = str(g.value(subject=product, predicate=ECSDI.Tipo))
+            prod['precio'] = float(g.value(subject=product, predicate=ECSDI.Precio))
+            prod['peso'] = int(g.value(subject=product, predicate=ECSDI.Peso))
+            prod['pedido'] = compra
+            purchases.append(prod)
+
+    return purchases
 
 if __name__ == '__main__':
     # Ponemos en marcha los behaviors
