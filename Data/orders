@@ -1,81 +1,30 @@
 @prefix ns1: <http://www.semanticweb.org/joan/ontologies/2020/3/practicaECSDI#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-ns1:pedido10 a ns1:Pedido ;
+ns1:pedido25 a ns1:Pedido ;
     ns1:Ciudad_Destino "Barcelona"^^xsd:string ;
-    ns1:Fecha_Pedido "2020-05-30T18:03:55.343371"^^xsd:dateTime ;
-    ns1:Peso_total_pedido 3 ;
-    ns1:Precio_toatl_pedido "1500.0"^^xsd:float ;
+    ns1:Fecha_Pedido "2020-05-30T19:31:15.456088"^^xsd:dateTime ;
+    ns1:Peso_total_pedido 8 ;
+    ns1:Precio_total_pedido "2973.9"^^xsd:float ;
     ns1:Prioridad_Entrega "normal"^^xsd:string ;
-    ns1:Productos_Pedido ns1:Producto_interno_4 .
+    ns1:Productos_Pedido ns1:Producto_interno_1,
+        ns1:Producto_interno_2,
+        ns1:Producto_interno_4,
+        ns1:Producto_interno_6 .
 
-ns1:pedido11 a ns1:Pedido ;
-    ns1:Ciudad_Destino "Barcelona"^^xsd:string ;
-    ns1:Fecha_Pedido "2020-05-30T18:04:42.960193"^^xsd:dateTime ;
-    ns1:Peso_total_pedido 0 ;
-    ns1:Precio_toatl_pedido "0.0"^^xsd:float ;
-    ns1:Prioridad_Entrega "normal"^^xsd:string .
-
-ns1:pedido13 a ns1:Pedido ;
-    ns1:Ciudad_Destino "Barcelona"^^xsd:string ;
-    ns1:Fecha_Pedido "2020-05-30T18:05:46.068702"^^xsd:dateTime ;
-    ns1:Peso_total_pedido 2 ;
-    ns1:Precio_toatl_pedido "62.25"^^xsd:float ;
-    ns1:Prioridad_Entrega "normal"^^xsd:string ;
-    ns1:Productos_Pedido ns1:Producto_interno_5 .
-
-ns1:pedido15 a ns1:Pedido ;
-    ns1:Ciudad_Destino "Barcelona"^^xsd:string ;
-    ns1:Fecha_Pedido "2020-05-30T18:07:53.589437"^^xsd:dateTime ;
-    ns1:Peso_total_pedido 1 ;
-    ns1:Precio_toatl_pedido "4.9"^^xsd:float ;
-    ns1:Prioridad_Entrega "normal"^^xsd:string ;
-    ns1:Productos_Pedido ns1:Producto_interno_6 .
-
-ns1:pedido17 a ns1:Pedido ;
-    ns1:Ciudad_Destino "Barcelona"^^xsd:string ;
-    ns1:Fecha_Pedido "2020-05-30T18:10:47.288458"^^xsd:dateTime ;
-    ns1:Peso_total_pedido 3 ;
-    ns1:Precio_toatl_pedido "1500.0"^^xsd:float ;
-    ns1:Prioridad_Entrega "normal"^^xsd:string ;
-    ns1:Productos_Pedido ns1:Producto_interno_4 .
-
-ns1:pedido6 a ns1:Pedido ;
-    ns1:Ciudad_Destino "Barcelona"^^xsd:string ;
-    ns1:Fecha_Pedido "2020-05-30T17:56:38.655082"^^xsd:dateTime ;
-    ns1:Peso_total_pedido 3 ;
-    ns1:Precio_toatl_pedido "1500.0"^^xsd:float ;
-    ns1:Prioridad_Entrega "normal"^^xsd:string ;
-    ns1:Productos_Pedido ns1:Producto_interno_4 .
-
-ns1:pedido8 a ns1:Pedido ;
-    ns1:Ciudad_Destino "Barcelona"^^xsd:string ;
-    ns1:Fecha_Pedido "2020-05-30T18:02:05.439230"^^xsd:dateTime ;
-    ns1:Peso_total_pedido 1 ;
-    ns1:Precio_toatl_pedido "18.5"^^xsd:float ;
-    ns1:Prioridad_Entrega "normal"^^xsd:string ;
-    ns1:Productos_Pedido ns1:Producto_interno_3 .
-
-ns1:Producto_interno_3 a ns1:Producto ;
-    ns1:Marca "Logitech"^^xsd:string ;
-    ns1:Nombre "Teclado USB"^^xsd:string ;
+ns1:Producto_interno_1 a ns1:Producto ;
+    ns1:Marca "Apple"^^xsd:string ;
+    ns1:Nombre "iPhone 11"^^xsd:string ;
     ns1:Peso 1 ;
-    ns1:Precio "18.5"^^xsd:float ;
+    ns1:Precio "809.0"^^xsd:float ;
     ns1:Tipo "tecnologia"^^xsd:string .
 
-ns1:Producto_interno_5 a ns1:Producto ;
-    ns1:Marca "Nike"^^xsd:string ;
-    ns1:Nombre "Zapatillas deportivas Nike"^^xsd:string ;
-    ns1:Peso 2 ;
-    ns1:Precio "62.25"^^xsd:float ;
-    ns1:Tipo "calzado"^^xsd:string .
-
-ns1:Producto_interno_6 a ns1:Producto ;
-    ns1:Marca "Bic"^^xsd:string ;
-    ns1:Nombre "Pack 10 boligrafos azules"^^xsd:string ;
-    ns1:Peso 1 ;
-    ns1:Precio "4.9"^^xsd:float ;
-    ns1:Tipo "papeleria"^^xsd:string .
+ns1:Producto_interno_2 a ns1:Producto ;
+    ns1:Marca "Lenovo"^^xsd:string ;
+    ns1:Nombre "Portatil Lenovo ideaPad"^^xsd:string ;
+    ns1:Peso 3 ;
+    ns1:Precio "660.0"^^xsd:float ;
+    ns1:Tipo "tecnologia"^^xsd:string .
 
 ns1:Producto_interno_4 a ns1:Producto ;
     ns1:Marca "Apple"^^xsd:string ;
@@ -83,4 +32,11 @@ ns1:Producto_interno_4 a ns1:Producto ;
     ns1:Peso 3 ;
     ns1:Precio "1500.0"^^xsd:float ;
     ns1:Tipo "tecnologia"^^xsd:string .
+
+ns1:Producto_interno_6 a ns1:Producto ;
+    ns1:Marca "Bic"^^xsd:string ;
+    ns1:Nombre "Pack 10 boligrafos azules"^^xsd:string ;
+    ns1:Peso 1 ;
+    ns1:Precio "4.9"^^xsd:float ;
+    ns1:Tipo "papeleria"^^xsd:string .
 

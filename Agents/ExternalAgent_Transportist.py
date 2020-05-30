@@ -141,10 +141,12 @@ def make_proposal(gm, content, send_to):
     g.add((subject, ECSDI.Precio_envio, Literal(precio, datatype = XSD.string)))
     g.add((subject, ECSDI.Fecha_Entrega, Literal(entrega, datatype = XSD.dateTime)))
 
-    g = build_message(g, ACL.propose, sender=ExternalTransportAgent.uri, msgcnt=mss_cnt, receiver=send_to,  )
+    g = build_message(g, ACL['propose'], sender=ExternalTransportAgent.uri, msgcnt=mss_cnt, receiver=send_to,  )
     
-    return g
     logger.info("We are sending a proposal. Weight of the package: " + str(peso) + "Limit: " + str(entrega) + " and price: " + str(precio) + "." )
+
+    return g
+    
 
 
 @app.route("/iface", methods=['GET', 'POST'])
@@ -206,17 +208,18 @@ def comunicacion():
 
         # Al recibir una peticion para enviar un producto.
         if perf == ACL['call-for-proposal']:
-            logger.info("Proposal Recived")
+            logger.info("Proposal Recived.")
             gr = make_proposal(gm, msgdic['content'], msgdic['sender'])
         
         # Si se accepta la propuesta del transportista, entonces se debe enviar el pedidio.
-        if perf == ACL['accept-proposal'] or perf == ACL['reject-proposal']:
+        elif perf == ACL['accept-proposal'] or perf == ACL['reject-proposal']:
             logger.info("Proposal has been accepted.")
             gr = build_message(Graph(),
                 ACL['inform'],
                 sender=ExternalTransportAgent.uri,
                 msgcnt=mss_cnt,
                 receiver=msgdic['sender'], )
+
     mss_cnt += 1
 
     logger.info('Respondemos a la peticion')

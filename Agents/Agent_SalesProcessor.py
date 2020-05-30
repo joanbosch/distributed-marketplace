@@ -382,7 +382,7 @@ def recordNewOrder(gm):
         gNewOrder.add((order, RDF.type, ECSDI.Pedido))
         gNewOrder.add((order, ECSDI.Ciudad_Destino, Literal(city, datatype=XSD.string)))
         gNewOrder.add((order, ECSDI.Fecha_Pedido, Literal(datetime.now(), datatype=XSD.dateTime)))
-        gNewOrder.add((order, ECSDI.Precio_toatl_pedido, Literal(total_price, datatype=XSD.float)))
+        gNewOrder.add((order, ECSDI.Precio_total_pedido, Literal(total_price, datatype=XSD.float)))
         gNewOrder.add((order, ECSDI.Prioridad_Entrega, Literal(priority, datatype=XSD.string)))
     
     total_weight = 0
