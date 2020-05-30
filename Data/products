@@ -4,7 +4,7 @@
 ns1:Producto_Externo_0 a ns1:Producto_externo ;
     ns1:Marca "Apple"^^xsd:string ;
     ns1:Nombre "iPod Touch"^^xsd:string ;
-    ns1:Peso "450.0"^^xsd:integer ;
+    ns1:Peso "450"^^xsd:integer ;
     ns1:Precio "199.99"^^xsd:float ;
     ns1:Tipo "tecnologia"^^xsd:string ;
     ns1:Vendido_por ns1:Vendedor_externo0 .
@@ -12,7 +12,7 @@ ns1:Producto_Externo_0 a ns1:Producto_externo ;
 ns1:Producto_Externo_3 a ns1:Producto_externo ;
     ns1:Marca "Apple"^^xsd:string ;
     ns1:Nombre "iPad mini 4"^^xsd:string ;
-    ns1:Peso "450.0"^^xsd:integer ;
+    ns1:Peso "450"^^xsd:integer ;
     ns1:Precio "449.99"^^xsd:float ;
     ns1:Tipo "tecnologia"^^xsd:string ;
     ns1:Vendido_por ns1:Vendedor_externo3 .

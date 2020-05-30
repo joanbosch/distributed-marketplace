@@ -1,16 +1,46 @@
 @prefix ns1: <http://www.semanticweb.org/joan/ontologies/2020/3/practicaECSDI#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-ns1:pedido25 a ns1:Pedido ;
+ns1:pedido11 a ns1:Pedido ;
     ns1:Ciudad_Destino "Barcelona"^^xsd:string ;
-    ns1:Fecha_Pedido "2020-05-30T19:31:15.456088"^^xsd:dateTime ;
-    ns1:Peso_total_pedido 8 ;
-    ns1:Precio_total_pedido "2973.9"^^xsd:float ;
+    ns1:Fecha_Pedido "2020-05-30T22:34:21.225560"^^xsd:dateTime ;
+    ns1:Peso_total_pedido 451 ;
+    ns1:Precio_total_pedido "204.89000000000001"^^xsd:float ;
+    ns1:Prioridad_Entrega "normal"^^xsd:string ;
+    ns1:Productos_Pedido ns1:Producto_Externo_0,
+        ns1:Producto_interno_6 .
+
+ns1:pedido13 a ns1:Pedido ;
+    ns1:Ciudad_Destino "Barcelona"^^xsd:string ;
+    ns1:Fecha_Pedido "2020-05-30T22:36:17.955668"^^xsd:dateTime ;
+    ns1:Peso_total_pedido 451 ;
+    ns1:Precio_total_pedido "454.89"^^xsd:float ;
+    ns1:Prioridad_Entrega "normal"^^xsd:string ;
+    ns1:Productos_Pedido ns1:Producto_Externo_3,
+        ns1:Producto_interno_6 .
+
+ns1:pedido5 a ns1:Pedido ;
+    ns1:Ciudad_Destino "Barcelona"^^xsd:string ;
+    ns1:Fecha_Pedido "2020-05-30T22:29:51.403492"^^xsd:dateTime ;
+    ns1:Peso_total_pedido 4 ;
+    ns1:Precio_total_pedido "1469.0"^^xsd:float ;
     ns1:Prioridad_Entrega "normal"^^xsd:string ;
     ns1:Productos_Pedido ns1:Producto_interno_1,
-        ns1:Producto_interno_2,
-        ns1:Producto_interno_4,
-        ns1:Producto_interno_6 .
+        ns1:Producto_interno_2 .
+
+ns1:Producto_Externo_0 a ns1:Producto ;
+    ns1:Marca "Apple"^^xsd:string ;
+    ns1:Nombre "iPod Touch"^^xsd:string ;
+    ns1:Peso 450 ;
+    ns1:Precio "199.99"^^xsd:float ;
+    ns1:Tipo "tecnologia"^^xsd:string .
+
+ns1:Producto_Externo_3 a ns1:Producto ;
+    ns1:Marca "Apple"^^xsd:string ;
+    ns1:Nombre "iPad mini 4"^^xsd:string ;
+    ns1:Peso 450 ;
+    ns1:Precio "449.99"^^xsd:float ;
+    ns1:Tipo "tecnologia"^^xsd:string .
 
 ns1:Producto_interno_1 a ns1:Producto ;
     ns1:Marca "Apple"^^xsd:string ;
@@ -24,13 +54,6 @@ ns1:Producto_interno_2 a ns1:Producto ;
     ns1:Nombre "Portatil Lenovo ideaPad"^^xsd:string ;
     ns1:Peso 3 ;
     ns1:Precio "660.0"^^xsd:float ;
-    ns1:Tipo "tecnologia"^^xsd:string .
-
-ns1:Producto_interno_4 a ns1:Producto ;
-    ns1:Marca "Apple"^^xsd:string ;
-    ns1:Nombre "MacBook Pro 128GB"^^xsd:string ;
-    ns1:Peso 3 ;
-    ns1:Precio "1500.0"^^xsd:float ;
     ns1:Tipo "tecnologia"^^xsd:string .
 
 ns1:Producto_interno_6 a ns1:Producto ;
