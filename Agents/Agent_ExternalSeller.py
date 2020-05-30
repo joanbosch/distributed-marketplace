@@ -16,7 +16,7 @@ import random
 import sys
 
 from flask import Flask, request
-from rdflib import Namespace, Graph, Literal, XSD
+from rdflib import Namespace, Graph, Literal, XSD, URIRef
 from rdflib.namespace import FOAF, RDF, RDFS
 
 from AgentUtil.ACLMessages import build_message, send_message, get_message_properties
@@ -306,16 +306,53 @@ def comunicacion():
                     # We must to the next:
                     # 1. Check that the external seller can add products. If not, respond with a message with  the preformative Refuse
                     # 2. If the seller can add products, send a message to Agent_SalesProcessor to register the new product
-                    
-                    nombre = gm.objects(content, ECSDI.Nombre_Tienda)
+
+                    nombre = ""
+                    forma_pago = ""
+
+                    for ext_sell in gm.subjects(RDF.type, ECSDI.Vendedor_Externo):
+                        nombre = gm.value(subject=ext_sell, predicate=ECSDI.Nombre)
+                        forma_pago = gm.value(subject=ext_sell, predicate=ECSDI.Forma_pago)
+
                     if is_external_seller(nombre):
                         
                         # Pedir al centro logistico que registre un nuevo producto.
                         g = Graph()
 
+                        for prod in gm.subjects(RDF.type, ECSDI.Producto_externo):
+                            nombre_producto = gm.value(prod, ECSDI.Nombre)
+                            marca = gm.value(prod, ECSDI.Marca)
+                            peso = gm.value(prod, ECSDI.Peso)
+                            precio = gm.value(prod, ECSDI.Precio)
+                            tipo = gm.value(prod, ECSDI.Tipo)
+
+                            content = ECSDI['Nuevo_Producto'+ str(mss_cnt)]
+                            g.add((content, RDF.Type, ECSDI.Nuevo_Producto))
+
+                            # New Product
+                            product = ECSDI['Producto_' + str(mss_cnt)]
+                            g.add((product, RDF.type, ECSDI.Producto))
+                            g.add((product, RDF.type, ECSDI.Producto_externo))
+                            g.add((product, ECSDI.Nombre, Literal(nombre_producto, datatype=XSD.string)))
+                            g.add((product, ECSDI.Marca, Literal(marca, datatype=XSD.string)))
+                            g.add((product, ECSDI.Peso, Literal(peso, datatype=XSD.integer)))
+                            g.add((product, ECSDI.Precio, Literal(precio, datatype=XSD.float)))
+                            g.add((product, ECSDI.Tipo, Literal(tipo, datatype=XSD.string)))
+
+                            gr.add((content, ECSDI.Producto_a_Registrar, URIRef(product)))
+
+                            # External Seller
+
+                            extern_seller = ECSDI['Vendedor_externo'+ str(mss_cnt)]
+                            g.add((extern_seller, RDF.type, ECSDI.Vendedor_externo))
+                            g.add((extern_seller, ECSDI.Nombre, Literal(nombre, datatype=XSD.string)))
+                            g.add((extern_seller, ECSDI.Forma_pago, Literal(forma_pago, datatype=XSD.string)))
+
+                            gr.add((product, ECSDI.Vendio_por, URIRef(extern_seller)))
+
 
                         venedor = get_agent_info(agn.SalesProcessorAgent)
-                        respuesta = send_message_to_agent(,venedor,content)
+                        respuesta = send_message_to_agent(g,venedor,content)
 
                         g = Graph()
                         g.add((content, RDF.type, ECSDI.Producto_Resgitrado))
@@ -344,14 +381,6 @@ def comunicacion():
                         sender=ExternalSellerAgent.uri,
                         msgcnt=mss_cnt,
                         receiver=msgdic['sender'])
-
-            # Aqui realizariamos lo que pide la accion
-            # Por ahora simplemente retornamos un Inform-done
-            #gr = build_message(Graph(),
-            #    ACL['inform-done'],
-            #    sender=SalesProcessorAgent.uri,
-            #    msgcnt=mss_cnt,
-            #    receiver=msgdic['sender'], )
     mss_cnt += 1
 
     logger.info('Respondemos a la peticion')
