@@ -245,9 +245,9 @@ def comunicacion():
                         product = r
 
                     accepted = analyzeReturnRequest(gm, motivo, product, orderURI)
+                    graph_res = Graph()
 
                     if accepted:
-                        graph_res = Graph()
                         estado_dev = ECSDI['estado_devolucion' + str(mss_cnt)]
                         graph_res.add((estado_dev, RDF.type, ECSDI.Estado_Devolucion))
                         graph_res.add((estado_dev, ECSDI.Devolucion_Aceptada, Literal(True, datatype=XSD.boolean)))
@@ -262,7 +262,7 @@ def comunicacion():
                         estado_dev = ECSDI['estado_devolucion' + str(mss_cnt)]
                         graph_res.add((estado_dev, RDF.type, ECSDI.Estado_Devolucion))
                         graph_res.add((estado_dev, ECSDI.Devolucion_Aceptada, Literal(False, datatype=XSD.boolean)))
-                        graph_res.add((estado_dev, ECSDI.Mensaje_Devolucion, Literal('Lo sentimos, su petición de de devolución ha sido denegada.', datatype=XSD.string)))
+                        graph_res.add((estado_dev, ECSDI.Mensaje_Devolucion, Literal('Lo sentimos, su petición de de devolución ha sido denegada ya que el plazo de devolución ya ha vencido.', datatype=XSD.string)))
 
                         gr = build_message(graph_res,
                         ACL['reject-proposal'],

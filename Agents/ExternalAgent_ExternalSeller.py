@@ -254,7 +254,7 @@ def browser_register_product():
             gr.add((subjectProd, ECSDI.Nombre, Literal(name, datatype=XSD.string)))
             gr.add((subjectProd, ECSDI.Marca, Literal(brand, datatype=XSD.string)))
             gr.add((subjectProd, ECSDI.Precio, Literal(price, datatype=XSD.float)))
-            gr.add((subjectProd, ECSDI.Peso, Literal(weight, datatype=XSD.float)))
+            gr.add((subjectProd, ECSDI.Peso, Literal(weight, datatype=XSD.integer)))
             gr.add((subjectProd, ECSDI.Tipo, Literal(tipo, datatype=XSD.float)))
 
             gr.add((content, ECSDI.Producto_a_Registrar, URIRef(subjectProd)))

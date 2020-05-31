@@ -1,13 +1,21 @@
 @prefix ns1: <http://www.semanticweb.org/joan/ontologies/2020/3/practicaECSDI#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-ns1:pedido13 a ns1:Pedido ;
-    ns1:Productos ns1:Producto_Externo_3 .
+ns1:pedido7 a ns1:Pedido ;
+    ns1:Productos ns1:Producto_interno_4,
+        ns1:Producto_interno_5 .
 
-ns1:Producto_Externo_3 a ns1:Producto ;
+ns1:Producto_interno_4 a ns1:Producto ;
     ns1:Marca "Apple"^^xsd:string ;
-    ns1:Nombre "iPad mini 4"^^xsd:string ;
-    ns1:Peso 450 ;
-    ns1:Precio "449.99"^^xsd:float ;
+    ns1:Nombre "MacBook Pro 128GB"^^xsd:string ;
+    ns1:Peso 3 ;
+    ns1:Precio "1500.0"^^xsd:float ;
     ns1:Tipo "tecnologia"^^xsd:string .
+
+ns1:Producto_interno_5 a ns1:Producto ;
+    ns1:Marca "Nike"^^xsd:string ;
+    ns1:Nombre "Zapatillas deportivas Nike"^^xsd:string ;
+    ns1:Peso 2 ;
+    ns1:Precio "62.25"^^xsd:float ;
+    ns1:Tipo "calzado"^^xsd:string .
 

@@ -1,45 +1,44 @@
 @prefix ns1: <http://www.semanticweb.org/joan/ontologies/2020/3/practicaECSDI#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-ns1:pedido11 a ns1:Pedido ;
+ns1:pedido3 a ns1:Pedido ;
     ns1:Ciudad_Destino "Barcelona"^^xsd:string ;
-    ns1:Fecha_Pedido "2020-05-30T22:34:21.225560"^^xsd:dateTime ;
-    ns1:Peso_total_pedido 451 ;
-    ns1:Precio_total_pedido "204.89000000000001"^^xsd:float ;
-    ns1:Prioridad_Entrega "normal"^^xsd:string ;
+    ns1:Fecha_Pedido "2020-05-31T11:02:31.250205"^^xsd:dateTime ;
+    ns1:Peso_total_pedido 452 ;
+    ns1:Precio_total_pedido "223.39000000000001"^^xsd:float ;
+    ns1:Prioridad_Entrega "maxima"^^xsd:string ;
     ns1:Productos_Pedido ns1:Producto_Externo_0,
-        ns1:Producto_interno_6 .
-
-ns1:pedido13 a ns1:Pedido ;
-    ns1:Ciudad_Destino "Barcelona"^^xsd:string ;
-    ns1:Fecha_Pedido "2020-05-30T22:36:17.955668"^^xsd:dateTime ;
-    ns1:Peso_total_pedido 451 ;
-    ns1:Precio_total_pedido "454.89"^^xsd:float ;
-    ns1:Prioridad_Entrega "normal"^^xsd:string ;
-    ns1:Productos_Pedido ns1:Producto_Externo_3,
+        ns1:Producto_interno_3,
         ns1:Producto_interno_6 .
 
 ns1:pedido5 a ns1:Pedido ;
     ns1:Ciudad_Destino "Barcelona"^^xsd:string ;
-    ns1:Fecha_Pedido "2020-05-30T22:29:51.403492"^^xsd:dateTime ;
-    ns1:Peso_total_pedido 4 ;
-    ns1:Precio_total_pedido "1469.0"^^xsd:float ;
+    ns1:Fecha_Pedido "2020-05-31T11:03:24.651130"^^xsd:dateTime ;
+    ns1:Peso_total_pedido 2 ;
+    ns1:Precio_total_pedido "62.25"^^xsd:float ;
     ns1:Prioridad_Entrega "normal"^^xsd:string ;
+    ns1:Productos_Pedido ns1:Producto_interno_5 .
+
+ns1:pedido7 a ns1:Pedido ;
+    ns1:Ciudad_Destino "Barcelona"^^xsd:string ;
+    ns1:Fecha_Pedido "2020-05-10T10:54:13.798917"^^xsd:dateTime,
+        "2020-05-31T11:05:15.667504"^^xsd:dateTime ;
+    ns1:Peso_total_pedido 2,
+        5 ;
+    ns1:Precio_total_pedido "827.5"^^xsd:float,
+        "1562.25"^^xsd:float ;
+    ns1:Prioridad_Entrega "maxima"^^xsd:string,
+        "normal"^^xsd:string ;
     ns1:Productos_Pedido ns1:Producto_interno_1,
-        ns1:Producto_interno_2 .
+        ns1:Producto_interno_3,
+        ns1:Producto_interno_4,
+        ns1:Producto_interno_5 .
 
 ns1:Producto_Externo_0 a ns1:Producto ;
     ns1:Marca "Apple"^^xsd:string ;
     ns1:Nombre "iPod Touch"^^xsd:string ;
     ns1:Peso 450 ;
     ns1:Precio "199.99"^^xsd:float ;
-    ns1:Tipo "tecnologia"^^xsd:string .
-
-ns1:Producto_Externo_3 a ns1:Producto ;
-    ns1:Marca "Apple"^^xsd:string ;
-    ns1:Nombre "iPad mini 4"^^xsd:string ;
-    ns1:Peso 450 ;
-    ns1:Precio "449.99"^^xsd:float ;
     ns1:Tipo "tecnologia"^^xsd:string .
 
 ns1:Producto_interno_1 a ns1:Producto ;
@@ -49,11 +48,11 @@ ns1:Producto_interno_1 a ns1:Producto ;
     ns1:Precio "809.0"^^xsd:float ;
     ns1:Tipo "tecnologia"^^xsd:string .
 
-ns1:Producto_interno_2 a ns1:Producto ;
-    ns1:Marca "Lenovo"^^xsd:string ;
-    ns1:Nombre "Portatil Lenovo ideaPad"^^xsd:string ;
+ns1:Producto_interno_4 a ns1:Producto ;
+    ns1:Marca "Apple"^^xsd:string ;
+    ns1:Nombre "MacBook Pro 128GB"^^xsd:string ;
     ns1:Peso 3 ;
-    ns1:Precio "660.0"^^xsd:float ;
+    ns1:Precio "1500.0"^^xsd:float ;
     ns1:Tipo "tecnologia"^^xsd:string .
 
 ns1:Producto_interno_6 a ns1:Producto ;
@@ -62,4 +61,18 @@ ns1:Producto_interno_6 a ns1:Producto ;
     ns1:Peso 1 ;
     ns1:Precio "4.9"^^xsd:float ;
     ns1:Tipo "papeleria"^^xsd:string .
+
+ns1:Producto_interno_3 a ns1:Producto ;
+    ns1:Marca "Logitech"^^xsd:string ;
+    ns1:Nombre "Teclado USB"^^xsd:string ;
+    ns1:Peso 1 ;
+    ns1:Precio "18.5"^^xsd:float ;
+    ns1:Tipo "tecnologia"^^xsd:string .
+
+ns1:Producto_interno_5 a ns1:Producto ;
+    ns1:Marca "Nike"^^xsd:string ;
+    ns1:Nombre "Zapatillas deportivas Nike"^^xsd:string ;
+    ns1:Peso 2 ;
+    ns1:Precio "62.25"^^xsd:float ;
+    ns1:Tipo "calzado"^^xsd:string .
 
