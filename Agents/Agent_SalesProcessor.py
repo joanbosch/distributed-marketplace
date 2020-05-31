@@ -253,6 +253,32 @@ def comunicacion():
                         graph_res.add((estado_dev, ECSDI.Devolucion_Aceptada, Literal(True, datatype=XSD.boolean)))
                         graph_res.add((estado_dev, ECSDI.Mensaje_Devolucion, Literal('El lunes de la próxima semana pasará un mensajero a recoger el producto que ha pedido devolver.', datatype=XSD.string)))
 
+                        # Give back money
+                        gr = Graph()
+                        action = ECSDI['devolver_importe'+str(mss_cnt)]
+                        gr.add((action, RDF.type, ECSDI.Devolver_importe))
+                        gr.add((action, ECSDI.Producto_a_Devolver, product))
+
+                        productsFile = open('../Data/products')
+                        productsGraph = Graph()
+                        productsGraph.parse(productsFile, format='turtle')
+
+                        for s,p,o in productsGraph.triples((product, None, None)):
+                            gr.add((s, p, o))
+                            if p == ECSDI.Vendido_por:
+                                logger.info('El producto es externo. Añadiendo datos vendedor.')
+                                for s1, p1, o1 in productsGraph.triples((o, None, None)):
+                                    gr.add((s1, p1, o1))
+
+                        ordersFile = open('../Data/orders')
+                        ordersGraph = Graph()
+                        ordersGraph.parse(ordersFile, format='turtle')
+
+                        payment = str(ordersGraph.value(URIRef(orderURI), ECSDI.Informacion_Pago))
+                        gr.add((action, ECSDI.Forma_pago, Literal(payment, datatype=XSD.string)))
+
+                        sendToTreasurer(gr, action, mss_cnt)
+
                         gr = build_message(graph_res,
                         ACL['accept-proposal'],
                         sender=SalesProcessorAgent.uri,
@@ -272,7 +298,7 @@ def comunicacion():
 
                 # Register new external product action
                 elif accion == ECSDI.Nuevo_Producto:
-                    logger.info("Registrando un nuevo producto externo.")
+                    logger.info("Registrando un nuevo producto externo")
                     result = gm.objects(content, ECSDI.Producto_a_Registrar)
                     for newProduct in result:
                         product = newProduct
@@ -290,6 +316,43 @@ def comunicacion():
                                 productsGraph.add((s1, p1, o1))
                     
                     productsGraph.serialize(destination='../Data/products', format='turtle')
+
+                    gr = build_message(Graph(),
+                        ACL['inform-done'],
+                        sender=SalesProcessorAgent.uri,
+                        msgcnt=mss_cnt,
+                        receiver=msgdic['sender'])
+                
+                elif accion == ECSDI.Listo_para_pagar:
+                    logger.info('Pedido listo para el pago')
+                    order_recieved = URIRef(gm.value(content, ECSDI.Pedido_enviado))
+
+                    ordersFile = open('../Data/orders')
+                    ordersGraph = Graph()
+                    ordersGraph.parse(ordersFile, format='turtle')
+
+                    productsFile = open('../Data/products')
+                    productsGraph = Graph()
+                    productsGraph.parse(productsFile, format='turtle')
+
+                    gr = Graph()
+                    action = ECSDI['pedido_a_cobrar'+str(mss_cnt)]
+                    gr.add((action, RDF.type, ECSDI.Cobrar_pedido))
+                    gr.add((action, ECSDI.Pedido_a_cobrar, order_recieved))
+                    for s,p,o in ordersGraph.triples((order_recieved, None, None)):
+                        gr.add((s, p, o))
+                    
+                    for prod in ordersGraph.objects(order_recieved, ECSDI.Productos_Pedido):
+                        # Add product info
+                        for s,p,o in productsGraph.triples((prod, None, None)):
+                            gr.add((s, p, o))
+                            # Add seller info if product is external (has Vendido_por object property)
+                            if p == ECSDI.Vendido_por:
+                                logger.info('Un producto externo. Añadiendo datos vendedor.')
+                                for s1, p1, o1 in productsGraph.triples((o, None, None)):
+                                    gr.add((s1, p1, o1))
+
+                    sendToTreasurer(gr, action, mss_cnt)
 
                     gr = build_message(Graph(),
                         ACL['inform-done'],
@@ -441,6 +504,7 @@ def recordNewOrder(gm):
         gNewOrder.add((order, RDF.type, ECSDI.Pedido))
         gNewOrder.add((order, ECSDI.Ciudad_Destino, Literal(city, datatype=XSD.string)))
         gNewOrder.add((order, ECSDI.Fecha_Pedido, Literal(datetime.now(), datatype=XSD.dateTime)))
+        gNewOrder.add((order, ECSDI.Informacion_Pago, Literal(payment, datatype=XSD.string)))
         gNewOrder.add((order, ECSDI.Precio_total_pedido, Literal(total_price, datatype=XSD.float)))
         gNewOrder.add((order, ECSDI.Prioridad_Entrega, Literal(priority, datatype=XSD.string)))
     
@@ -512,6 +576,15 @@ def analyzeReturnRequest(gm, motivo, product, orderURI):
         return accept
 
     return False
+
+def sendToTreasurer(gr, content, mss_cnt):
+    logger.info('Pedimos al Tesorero que realice el cobro')
+    treasurer = get_agent_info(agn.NomQueTinguiElTesorero, DirectoryAgent, SalesProcessorAgent, mss_cnt) # POSAR NOM DEL TESORERO!!!
+
+    gr = send_message(
+        build_message(gr, perf=ACL.request, sender=SalesProcessorAgent.uri, receiver=treasurer.uri, msgcnt=mss_cnt, content=content),
+        treasurer.address
+    )
 
 def get_agent_info(type_, directory_agent, sender, msgcnt):
     gmess = Graph()
