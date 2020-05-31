@@ -462,7 +462,11 @@ def saveNewOrder(graf):
             gr.add((product, ECSDI.Tipo, Literal(tipo, datatype=XSD.string)))
             gr.add((compra, ECSDI.Productos, URIRef(product)))
 
-    gr.serialize(destination='../Data/purchases', format='turtle')
+    g = Graph()
+    g.parse(open('../Data/purchases'), format='turtle')
+    g += gr
+
+    g.serialize(destination='../Data/purchases', format='turtle')
 
 def get_purchases():
     logger.info("Consiguiendo el historial de compras")
