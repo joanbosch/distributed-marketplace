@@ -291,14 +291,34 @@ def comunicacion():
                 elif accion == ECSDI.Devolver_importe:
                     logger.info("Se ha pedido devolver un importe.")
 
+                    subject_trans = ECSDI["Realizar_transferencia_" + str(mss_cnt)]
                     # coger la información de pago y el importe y comunicarse con el agente externo banco
                     for s in gm.subjects(RDF.type, ECSDI.Devolver_importe):
                         info_pago_usuario = str(gm.value(subject=s, predicate=ECSDI.Forma_pago))
+                        g.add((subject_trans, ECSDI.Cuenta_destino, Literal(info_pago_usuario, datatype=XSD.string)))
 
                     # obtenemos el importe del producto 
+                    for producto in gm.objects(subject=content, predicate=ECSDI.Producto_a_Devolver):
+                        g.add((subject_trans, RDF.type, ECSDI.Realizar_transferencia))
 
-                    res = send_message_to_agent(g, banco, content)
+                        importe = float(gm.value(subject=producto, predicate=ECSDI.Precio))
+                        g.add((subject_trans, ECSDI.Importe, Literal(import_int, datatype=XSD.float)))
+                        
+                        # miramos el tipo de producto, para saber cual es la cuenta origen
+                        prod_type = gm.value(subject=producto, predicate=RDF.type)
 
+                        if prod_type == ECSDI.Producto_interno:
+                            g.add((subject_trans, ECSDI.Cuenta_origen, Literal("MiTienda000", datatype=XSD.string)))
+                        
+                        else:
+                            # obtenemos la información de pago del vendedor externo
+                            for vend_ext in gm.objects(subject=producto, predicate=ECSDI.Vendido_por):
+                                info_pago_ext = str(gm.value(subject=vend_ext, predicate=ECSDI.Forma_pago))
+                                g.add((subject_trans, ECSDI.Cuenta_origen, Literal(info_pago_ext, datatype=XSD.string)))
+
+                        res = send_message_to_agent(g, banco, subject_trans)
+
+                    # una vez se ha realizado la transferencia, respondemos con un ACK
                     gr = build_message(Graph(),
                         ACL['inform-done'],
                         sender=TreasurerAgent.uri,

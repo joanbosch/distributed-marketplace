@@ -166,7 +166,7 @@ def comunicacion():
 
                 # Realizar una transferencia
                 if accion == ECSDI.Realizar_transferencia:
-                    logger.info("Realizamos la tranferencia")
+                    logger.info("Se ha pedido realizar una transferencia.")
 
                     origen = gm.value(subject=content, predicate=ECSDI.Cuenta_origen)
                     destino = gm.value(subject=content, predicate=ECSDI.Cuenta_destino)
