@@ -284,6 +284,10 @@ def comunicacion():
                     productData = gm.triples((product, None, None))
                     for s,p,o in productData:
                         productsGraph.add((s,p,o))
+                        if (p == ECSDI.Vendido_por):
+                            ext_seller = gm.triples((o, None, None))
+                            for s1, p1, o1 in ext_seller:
+                                productsGraph.add((s1, p1, o1))
                     
                     productsGraph.serialize(destination='../Data/products', format='turtle')
 
