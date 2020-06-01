@@ -235,14 +235,16 @@ def comunicacion():
                     # coger la información de pago y el importe y comunicarse con el agente externo banco
                     for s in gm.subjects(RDF.type, ECSDI.Pedido):
                         info_pago_usuario = str(gm.value(subject=s, predicate=ECSDI.Informacion_Pago))
-
+                            
+                        logger.info("Informacion de pago: " + info_pago_usuario)
                         # miramos y sumamos el importe de los productos internos (si es el caso)
-                        for prod_int in gm.objects(subject=s, predicate=ECSDI.Producto_interno):
+                        for prod_int in gm.subjects(RDF.type, ECSDI.Producto_interno):
                             precio_int = float(gm.value(subject=prod_int, predicate=ECSDI.Precio))
+                            logger.info("Precio : " + str(precio_int))
                             import_int += precio_int
 
                         # miramos los productos externos y nos guardamos la informacion de pago (si es el caso)
-                        for prod_ext in gm.objects(subject=s, predicate=ECSDI.Producto_externo):
+                        for prod_ext in gm.subjects(RDF.type, ECSDI.Producto_externo):
                             # cogemos la información del vendedor externo
                             for vend_ext in gm.objects(subject=prod_ext, predicate=ECSDI.Vendido_por):
                                 info_pago_ext = str(gm.value(subject=vend_ext, predicate=ECSDI.Forma_pago))
@@ -263,6 +265,7 @@ def comunicacion():
 
                     # si se han encontrado productos internos, procedemos a cobrar el importe calculado
                     if import_int != 0:
+                        logger.info("Se cobra el importe de un producto interno.")
                         subject_trans = ECSDI["Realizar_transferencia_" + str(mss_cnt)]
                         g.add((subject_trans, RDF.type, ECSDI.Realizar_transferencia))
                         g.add((subject_trans, ECSDI.Cuenta_origen, Literal(info_pago_usuario, datatype=XSD.string)))
@@ -272,6 +275,7 @@ def comunicacion():
 
                     # si se han encontrado productos externos, procedemos a cobrar el importe para cada vendedor externo
                     if info_ext:
+                        logger.info("Se cobran los importes de productos externos.")
                         # por cada vendedor externo diferente le cobramos lo correspondido
                         for item in info_ext:
                             subject_trans = ECSDI["Realizar_transferencia_" + str(mss_cnt)]

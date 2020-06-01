@@ -339,6 +339,9 @@ def comunicacion():
                     action = ECSDI['pedido_a_cobrar'+str(mss_cnt)]
                     gr.add((action, RDF.type, ECSDI.Cobrar_pedido))
                     gr.add((action, ECSDI.Pedido_a_cobrar, order_recieved))
+
+                    logger.info("Pedido recibido: " + order_recieved)
+
                     for s,p,o in ordersGraph.triples((order_recieved, None, None)):
                         gr.add((s, p, o))
                     
@@ -579,7 +582,7 @@ def analyzeReturnRequest(gm, motivo, product, orderURI):
 
 def sendToTreasurer(gr, content, mss_cnt):
     logger.info('Pedimos al Tesorero que realice el cobro')
-    treasurer = get_agent_info(agn.NomQueTinguiElTesorero, DirectoryAgent, SalesProcessorAgent, mss_cnt) # POSAR NOM DEL TESORERO!!!
+    treasurer = get_agent_info(agn.TreasurerAgent, DirectoryAgent, SalesProcessorAgent, mss_cnt)
 
     gr = send_message(
         build_message(gr, perf=ACL.request, sender=SalesProcessorAgent.uri, receiver=treasurer.uri, msgcnt=mss_cnt, content=content),

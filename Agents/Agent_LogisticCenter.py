@@ -250,17 +250,15 @@ def add_to_lote(gm, content):
         logger.info(priority)
         peso = gm.value(subject=s, predicate=ECSDI.Peso_total_pedido)
 
-    # Añadimos el pedido a un lote
-    subjectLote = ECSDI['Lote_' + str(mss_cnt)]
-    lotes.add((subjectLote, RDF.type, ECSDI.Lote))
+        # Añadimos el pedido a un lote
+        subjectLote = ECSDI['Lote_' + str(mss_cnt)]
+        lotes.add((subjectLote, RDF.type, ECSDI.Lote))
+        lotes.add((s, RDF.type, ECSDI.Pedido))
+        lotes.add((s, ECSDI.Ciudad_Destino, Literal(city, datatype=XSD.string)))
+        lotes.add((s, ECSDI.Prioridad_Entrega, Literal(priority, datatype=XSD.string)))
+        lotes.add((s, ECSDI.Peso_total_pedido, Literal(peso, datatype=XSD.integer)))
 
-    subjectPedido = ECSDI['Pedio_lote_' + str(mss_cnt)]
-    lotes.add((subjectPedido, RDF.type, ECSDI.Pedido))
-    lotes.add((subjectPedido, ECSDI.Ciudad_Destino, Literal(city, datatype=XSD.string)))
-    lotes.add((subjectPedido, ECSDI.Prioridad_Entrega, Literal(priority, datatype=XSD.string)))
-    lotes.add((subjectPedido, ECSDI.Peso_total_pedido, Literal(peso, datatype=XSD.integer)))
-
-    lotes.add((subjectLote, ECSDI.Pedidos_lote, URIRef(subjectPedido)))
+        lotes.add((subjectLote, ECSDI.Pedidos_lote, URIRef(s)))
 
     lotes.serialize(destination='../Data/lotes', format='turtle')
 
@@ -390,14 +388,14 @@ def requestTransport(gr, content, pedido):
     graph.add((sub, RDF.type, ECSDI.Listo_para_pagar))
     graph.add((sub, ECSDI.Pedido_enviado, Literal(pedido, datatype=XSD.string)))
 
-    TransportAg = get_agent_info(agn.SalesProcessorAgent)
+    SalesProcessorAg = get_agent_info(agn.SalesProcessorAgent)
 
     gr = send_message(build_message(graph, 
             perf = ACL.request, 
             sender = LogisticCenterAgent.uri, 
-            receiver = TransportAg.uri,
+            receiver = SalesProcessorAg.uri,
             msgcnt = mss_cnt,
-            content = pedido), TransportAg.address)      
+            content = sub), SalesProcessorAg.address)      
 
             
 
