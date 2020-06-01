@@ -307,7 +307,7 @@ def comunicacion():
                         g.add((subject_trans, RDF.type, ECSDI.Realizar_transferencia))
 
                         importe = float(gm.value(subject=producto, predicate=ECSDI.Precio))
-                        g.add((subject_trans, ECSDI.Importe, Literal(import_int, datatype=XSD.float)))
+                        g.add((subject_trans, ECSDI.Importe, Literal(importe, datatype=XSD.float)))
                         
                         # miramos el tipo de producto, para saber cual es la cuenta origen
                         prod_type = gm.value(subject=producto, predicate=RDF.type)

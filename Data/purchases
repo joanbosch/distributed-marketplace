@@ -10,29 +10,13 @@ ns1:pedido16 a ns1:Pedido ;
         ns1:Producto_interno_5 .
 
 ns1:pedido21 a ns1:Pedido ;
-    ns1:Productos ns1:Producto_Externo_1,
-        ns1:Producto_Externo_5,
-        ns1:Producto_interno_4 .
+    ns1:Productos ns1:Producto_Externo_1 .
 
 ns1:pedido4 a ns1:Pedido ;
     ns1:Productos ns1:Producto_interno_3 .
 
 ns1:pedido8 a ns1:Pedido ;
     ns1:Productos ns1:Producto_Externo_1 .
-
-ns1:Producto_Externo_5 a ns1:Producto ;
-    ns1:Marca "Corsair"^^xsd:string ;
-    ns1:Nombre "RAM DDR4 16GB"^^xsd:string ;
-    ns1:Peso 20 ;
-    ns1:Precio "99.99"^^xsd:float ;
-    ns1:Tipo "tecnologia"^^xsd:string .
-
-ns1:Producto_interno_4 a ns1:Producto ;
-    ns1:Marca "Apple"^^xsd:string ;
-    ns1:Nombre "MacBook Pro 128GB"^^xsd:string ;
-    ns1:Peso 3 ;
-    ns1:Precio "1500.0"^^xsd:float ;
-    ns1:Tipo "tecnologia"^^xsd:string .
 
 ns1:Producto_interno_5 a ns1:Producto ;
     ns1:Marca "Nike"^^xsd:string ;
