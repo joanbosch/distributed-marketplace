@@ -273,63 +273,40 @@ def createSend():
     lotes = Graph()
     lotes.parse(open('../Data/lotes'), format='turtle')
 
-    # Miramos todos los lotes a enviar con prioridad maxima
+    # Miramos todos los lotes a enviar 
     for lote in lotes.subjects(RDF.type, ECSDI.Lote):
         for pedido in lotes.objects(subject=lote, predicate=ECSDI.Pedidos_lote):
             city = lotes.value(subject=pedido, predicate=ECSDI.Ciudad_Destino)
             priority = lotes.value(subject=pedido, predicate=ECSDI.Prioridad_Entrega)
             peso = lotes.value(subject=pedido, predicate=ECSDI.Peso_total_pedido)
-            date = datetime.now() + timedelta(days=2)
+
+            # Miramos la prioridad de cada lote para asignar una fecha de entrega máxima
             if str(priority) == 'maxima':
-                
-                gr = Graph()
+                date = datetime.now() + timedelta(days=2)
+            elif str(priority) == 'normal':
+                date = datetime.now() + timedelta(days=5)
 
-                subjectTransport = ECSDI['Transportar_paquete_' + str(mss_cnt)]
-                gr.add((subjectTransport, RDF.type, ECSDI.Transortar_Paquete))
-                gr.add((subjectTransport, ECSDI.Terminio_maximo_entrega, Literal(date, datatype=XSD.dateTime)))
-                gr.add((subjectTransport, ECSDI.Destino_pedido, Literal(city, datatype=XSD.sting)))
-                gr.add((subjectTransport, ECSDI.Peso, Literal(peso, datatype=XSD.integer)))
+            gr = Graph()
 
-                subjectT = ECSDI['Transportsta_'+ str(mss_cnt)]
-                lotes.add((subjectT, RDF.type, ECSDI.Transportista))
-                lotes.add((lote, ECSDI.Lote_Asignado_Transportista, URIRef(subjectT)))
+            subjectTransport = ECSDI['Transportar_paquete_' + str(mss_cnt)]
+            gr.add((subjectTransport, RDF.type, ECSDI.Transortar_Paquete))
+            gr.add((subjectTransport, ECSDI.Terminio_maximo_entrega, Literal(date, datatype=XSD.dateTime)))
+            gr.add((subjectTransport, ECSDI.Destino_pedido, Literal(city, datatype=XSD.sting)))
+            gr.add((subjectTransport, ECSDI.Peso, Literal(peso, datatype=XSD.integer)))
 
-                # Pedimos transporte
-                requestTransport(gr, subjectTransport)
+            subjectT = ECSDI['Transportsta_'+ str(mss_cnt)]
+            lotes.add((subjectT, RDF.type, ECSDI.Transportista))
+            lotes.add((lote, ECSDI.Lote_Asignado_Transportista, URIRef(subjectT)))
 
-                # Eliminamos Lote enviado
-                removeLote(lote)
+            # Pedimos transporte
+            requestTransport(gr, subjectTransport, pedido)
 
-    # Miramos todos los lotes a enviar con prioridad normal
-    for lote in lotes.subjects(RDF.type, ECSDI.Lote):
-        for pedido in lotes.objects(subject=lote, predicate=ECSDI.Pedidos_lote):
-            city = lotes.value(subject=pedido, predicate=ECSDI.Ciudad_Destino)
-            priority = lotes.value(subject=pedido, predicate=ECSDI.Prioridad_Entrega)
-            peso = lotes.value(subject=pedido, predicate=ECSDI.Peso_total_pedido)
-            date = datetime.now() + timedelta(days=5)
-            if str(priority) == 'normal':
-
-                gr = Graph()
-
-                subjectTransport = ECSDI['Transportar_paquete_' + str(mss_cnt)]
-                gr.add((subjectTransport, RDF.type, ECSDI.Transortar_Paquete))
-                gr.add((subjectTransport, ECSDI.Terminio_maximo_entrega, Literal(date, datatype=XSD.dateTime)))
-                gr.add((subjectTransport, ECSDI.Destino_pedido, Literal(city, datatype=XSD.sting)))
-                gr.add((subjectTransport, ECSDI.Peso, Literal(peso, datatype=XSD.integer)))
-
-                subjectT = ECSDI['Transportsta_'+ str(mss_cnt)]
-                lotes.add((subjectT, RDF.type, ECSDI.Transportista))
-                lotes.add((lote, ECSDI.Lote_Asignado_Transportista, URIRef(subjectT)))
-
-                # Pedimos transporte
-                requestTransport(gr, subjectTransport)
-
-                # Eliminamos Lote enviado
-                removeLote(lote)
+            # Eliminamos Lote enviado
+            removeLote(lote)
 
       
 
-def requestTransport(gr, content):
+def requestTransport(gr, content, pedido):
 
     global mss_cnt
     
@@ -352,15 +329,76 @@ def requestTransport(gr, content):
 
         # El transportista nos envia un precio sobre el pedido propuesto enviado
         logger.info('Recibimos el precio ofrecido por el transportista')
-        subjet = gr.subjects(RDF.type, ECSDI.Propuesta_Transporte)
+        subjet = gr.subjects(RDF.type, ECSDI.Propuesta_transporte)
         for s in subjet:
-            precio = gr.value(subject=s, predicate=ECSDI.Precio_envio)
+            precio = float(gr.value(subject=s, predicate=ECSDI.Precio_envio))
 
-        gr =send_message(build_message(Graph(), 
-            perf = ACL['accept-proposal'], 
+        # Contra oferta sobre el precio propuesto por el transportista
+        logger.info('El Centro Logístico hace una contra oferta al transportista.')
+
+        nuevo_precio = precio - (precio * (random.randint(1,15))/100)
+
+        g = Graph()
+
+        subjectGr = ECSDI['Enviar_controferta_' + str(mss_cnt)]
+        g.add((subjectGr, RDF.type, ECSDI.Enviar_contraoferta))
+        g.add((subjectGr, ECSDI.Precio_envio, Literal(precio, datatype=XSD.float)))
+        g.add((subjectGr, ECSDI.Precio_contraoferta, Literal(nuevo_precio, datatype=XSD.float)))
+
+        gr = send_message(build_message(g, 
+            perf = ACL.request, 
             sender = LogisticCenterAgent.uri, 
-                receiver = msgdic['sender'],
-                msgcnt = mss_cnt), TransportAg.address)
+            receiver = msgdic['sender'],
+            msgcnt = mss_cnt,
+            content = subjectGr), TransportAg.address)
+
+        msgdic = get_message_properties(gr)
+        performativa = msgdic['performative']
+
+        if performativa == ACL['accept']:
+            logger.info('El transportista ha aceptado la contra oferta.')
+
+            gr = send_message(build_message(Graph(), 
+            perf = ACL['inform'], 
+            sender = LogisticCenterAgent.uri, 
+            receiver = msgdic['sender'],
+            msgcnt = mss_cnt), TransportAg.address)
+
+        elif performativa == ACL['reject']:
+            logger.info('El transportista no ha aceptado la contra oferta.')
+
+            gr = send_message(build_message(Graph(), 
+            perf = ACL['inform'], 
+            sender = LogisticCenterAgent.uri, 
+            receiver = msgdic['sender'],
+            msgcnt = mss_cnt), TransportAg.address)
+
+        elif performativa == ACL['propose']:
+            logger.info('El transportista ha enviado una nueva contra oferta.')
+
+            gr = send_message(build_message(Graph(), 
+            perf = ACL['inform'], 
+            sender = LogisticCenterAgent.uri, 
+            receiver = msgdic['sender'],
+            msgcnt = mss_cnt), TransportAg.address)
+
+    logger.info('El pedido ha sido enviado correctamente.')
+    logger.info('Enviamos un mensaje a Sales Procesor para informar que el pedido ha sido enviado.')
+
+    graph = Graph()
+    sub = ECSDI['Listo_para_pagar_' + str(mss_cnt)] 
+    graph.add((sub, RDF.type, ECSDI.Listo_para_pagar))
+    graph.add((sub, ECSDI.Pedido_enviado, Literal(pedido, datatype=XSD.string)))
+
+    TransportAg = get_agent_info(agn.SalesProcessorAgent)
+
+    gr = send_message(build_message(graph, 
+            perf = ACL.request, 
+            sender = LogisticCenterAgent.uri, 
+            receiver = TransportAg.uri,
+            msgcnt = mss_cnt,
+            content = pedido), TransportAg.address)      
+
             
 
 def removeLote(url):
