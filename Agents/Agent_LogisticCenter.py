@@ -329,14 +329,14 @@ def requestTransport(gr, content, pedido):
 
         # El transportista nos envia un precio sobre el pedido propuesto enviado
         logger.info('Recibimos el precio ofrecido por el transportista')
-        subjet = gr.subjects(RDF.type, ECSDI.Propuesta_Transporte)
+        subjet = gr.subjects(RDF.type, ECSDI.Propuesta_transporte)
         for s in subjet:
-            precio = gr.value(subject=s, predicate=ECSDI.Precio_envio)
+            precio = float(gr.value(subject=s, predicate=ECSDI.Precio_envio))
 
         # Contra oferta sobre el precio propuesto por el transportista
         logger.info('El Centro Logístico hace una contra oferta al transportista.')
 
-        nuevo_precio = precio + precio * (random.randint(1,15))/100
+        nuevo_precio = precio - (precio * (random.randint(1,15))/100)
 
         g = Graph()
 

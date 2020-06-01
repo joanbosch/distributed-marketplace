@@ -242,15 +242,17 @@ def comunicacion():
                 
                 # If the external seller want to add products in our shop.
                 if accion == ECSDI.Enviar_contraoferta:
+                    logger.info("Se ha recibido una contraoferta.")
                     precio_inicial = 0
                     precio_oferta = 0
                     for subj in gm.subjects(RDF.type, ECSDI.Enviar_contraoferta):
                         precio_inicial = float(gm.value(subject=subj, predicate=ECSDI.Precio_envio))
                         precio_oferta = float(gm.value(subject=subj, predicate=ECSDI.Precio_contraoferta))
 
-                    descuento = (precio_oferta/precio_inicial)*100
+                    descuento = 100 - (precio_oferta/precio_inicial)*100
 
                     if descuento < 6:
+                        logger.info("Se accepta la contra-oferta.")
                         gr = build_message(Graph(),
                             ACL['accept'],
                             sender=ExternalTransportAgent.uri,
@@ -258,8 +260,10 @@ def comunicacion():
                             receiver=msgdic['sender'])
                     
                     elif descuento < 11:
+                        logger.info("Se va a ofrecer una nueva contra-oferta al centro logísitco.")
                         gr = make_counter_offer(precio_inicial, msgdic['sender'], descuento)
                     elif descuento > 10:
+                        logger.info("Se rechaza la contra-oferta proporcionada por el centro logístico.")
                         gr = build_message(Graph(),
                             ACL['reject'],
                             sender=ExternalTransportAgent.uri,
