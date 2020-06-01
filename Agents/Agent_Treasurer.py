@@ -251,17 +251,17 @@ def comunicacion():
                                 # si no tenemos el vendedor guardado, lo añadimos con la información necesaria
                                 if vend_ext not in extSeller_pos:
                                     extSeller_pos[vend_ext] = index
-                                    subject_imp = info_ext[extSeller_pos[prod_ext]]
+                                    subject_imp = {}
                                     subject_imp['importe'] = float(gm.value(subject=prod_ext, predicate=ECSDI.Precio))
                                     #cogemos la información de pago
                                     subject_imp['cuenta'] = info_pago_ext
-                                    info_ext[extSeller_pos[prod_ext]] = subject_imp
+                                    info_ext.append(subject_imp)
                                     index += 1
                                 # si el vendedor ya lo tenemos guardado
-                                elif prod_ext in extSeller_pos:
-                                    subject_imp = info_ext[extSeller_pos[prod_ext]]
+                                elif vend_ext in extSeller_pos:
+                                    subject_imp = info_ext[extSeller_pos[vend_ext]]
                                     subject_imp['importe'] += float(gm.value(subject=prod_ext, predicate=ECSDI.Precio))
-                                    info_ext[extSeller_pos[prod_ext]] = subject_imp
+                                    info_ext[extSeller_pos[vend_ext]] = subject_imp
 
                     # si se han encontrado productos internos, procedemos a cobrar el importe calculado
                     if import_int != 0:
@@ -275,15 +275,16 @@ def comunicacion():
 
                     # si se han encontrado productos externos, procedemos a cobrar el importe para cada vendedor externo
                     if info_ext:
+                        ga = Graph()
                         logger.info("Se cobran los importes de productos externos.")
                         # por cada vendedor externo diferente le cobramos lo correspondido
                         for item in info_ext:
                             subject_trans = ECSDI["Realizar_transferencia_" + str(mss_cnt)]
-                            g.add((subject_trans, RDF.type, ECSDI.Realizar_transferencia))
-                            g.add((subject_trans, ECSDI.Cuenta_origen, Literal(info_pago_usuario, datatype=XSD.string)))
-                            g.add((subject_trans, ECSDI.Cuenta_destino, Literal(item['cuenta'], datatype=XSD.string)))
-                            g.add((subject_trans, ECSDI.Importe, Literal(item['importe'], datatype=XSD.float)))
-                            res = send_message_to_agent(g, banco, subject_trans)
+                            ga.add((subject_trans, RDF.type, ECSDI.Realizar_transferencia))
+                            ga.add((subject_trans, ECSDI.Cuenta_origen, Literal(info_pago_usuario, datatype=XSD.string)))
+                            ga.add((subject_trans, ECSDI.Cuenta_destino, Literal(item['cuenta'], datatype=XSD.string)))
+                            ga.add((subject_trans, ECSDI.Importe, Literal(item['importe'], datatype=XSD.float)))
+                            res = send_message_to_agent(ga, banco, subject_trans)
 
                     # una vez cobrados los importes necesarios, respondemos con un ACK
                     gr = build_message(Graph(),
