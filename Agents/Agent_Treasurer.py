@@ -226,7 +226,7 @@ def comunicacion():
                 # Cobrar el importe de un pedido
                 if accion == ECSDI.Cobrar_pedido:
                     logger.info("Se ha pedido cobrar un pedido.")
-                    import_int = 0.0
+                    import_tot = 0.0
                     # en el caso que haya más de un producto externo, lo guardamos en una lista
                     index = 0
                     extSeller_pos = {}
@@ -235,13 +235,7 @@ def comunicacion():
                     # coger la información de pago y el importe y comunicarse con el agente externo banco
                     for s in gm.subjects(RDF.type, ECSDI.Pedido):
                         info_pago_usuario = str(gm.value(subject=s, predicate=ECSDI.Informacion_Pago))
-                            
-                        logger.info("Informacion de pago: " + info_pago_usuario)
-                        # miramos y sumamos el importe de los productos internos (si es el caso)
-                        for prod_int in gm.subjects(RDF.type, ECSDI.Producto_interno):
-                            precio_int = float(gm.value(subject=prod_int, predicate=ECSDI.Precio))
-                            logger.info("Precio : " + str(precio_int))
-                            import_int += precio_int
+                        import_tot = float(gm.value(subject=s, predicate=ECSDI.Precio_total_pedido))
 
                         # miramos los productos externos y nos guardamos la informacion de pago (si es el caso)
                         for prod_ext in gm.subjects(RDF.type, ECSDI.Producto_externo):
@@ -263,15 +257,14 @@ def comunicacion():
                                     subject_imp['importe'] += float(gm.value(subject=prod_ext, predicate=ECSDI.Precio))
                                     info_ext[extSeller_pos[vend_ext]] = subject_imp
 
-                    # si se han encontrado productos internos, procedemos a cobrar el importe calculado
-                    if import_int != 0:
-                        logger.info("Se cobra el importe de un producto interno.")
-                        subject_trans = ECSDI["Realizar_transferencia_" + str(mss_cnt)]
-                        g.add((subject_trans, RDF.type, ECSDI.Realizar_transferencia))
-                        g.add((subject_trans, ECSDI.Cuenta_origen, Literal(info_pago_usuario, datatype=XSD.string)))
-                        g.add((subject_trans, ECSDI.Cuenta_destino, Literal("MiTienda000", datatype=XSD.string)))
-                        g.add((subject_trans, ECSDI.Importe, Literal(import_int, datatype=XSD.float)))
-                        res = send_message_to_agent(g, banco, subject_trans)
+                    # Realizamos el cobro al cliente de todo a la tienda
+                    logger.info("Se cobra el importe total del pedido .")
+                    subject_trans = ECSDI["Realizar_transferencia_" + str(mss_cnt)]
+                    g.add((subject_trans, RDF.type, ECSDI.Realizar_transferencia))
+                    g.add((subject_trans, ECSDI.Cuenta_origen, Literal(info_pago_usuario, datatype=XSD.string)))
+                    g.add((subject_trans, ECSDI.Cuenta_destino, Literal("MiTienda000", datatype=XSD.string)))
+                    g.add((subject_trans, ECSDI.Importe, Literal(import_tot, datatype=XSD.float)))
+                    res = send_message_to_agent(g, banco, subject_trans)
 
                     # si se han encontrado productos externos, procedemos a cobrar el importe para cada vendedor externo
                     if info_ext:
@@ -281,7 +274,7 @@ def comunicacion():
                         for item in info_ext:
                             subject_trans = ECSDI["Realizar_transferencia_" + str(mss_cnt)]
                             ga.add((subject_trans, RDF.type, ECSDI.Realizar_transferencia))
-                            ga.add((subject_trans, ECSDI.Cuenta_origen, Literal(info_pago_usuario, datatype=XSD.string)))
+                            ga.add((subject_trans, ECSDI.Cuenta_origen, Literal("MiTienda000", datatype=XSD.string)))
                             ga.add((subject_trans, ECSDI.Cuenta_destino, Literal(item['cuenta'], datatype=XSD.string)))
                             ga.add((subject_trans, ECSDI.Importe, Literal(item['importe'], datatype=XSD.float)))
                             res = send_message_to_agent(ga, banco, subject_trans)
@@ -308,19 +301,25 @@ def comunicacion():
 
                         importe = float(gm.value(subject=producto, predicate=ECSDI.Precio))
                         g.add((subject_trans, ECSDI.Importe, Literal(importe, datatype=XSD.float)))
+                        g.add((subject_trans, ECSDI.Cuenta_origen, Literal("MiTienda000", datatype=XSD.string)))
                         
                         # miramos el tipo de producto, para saber cual es la cuenta origen
                         prod_type = gm.value(subject=producto, predicate=RDF.type)
-
-                        if prod_type == ECSDI.Producto_interno:
-                            g.add((subject_trans, ECSDI.Cuenta_origen, Literal("MiTienda000", datatype=XSD.string)))
                         
-                        else:
+                        # si es un producto externo debemos conseguir el dinero del vendedor externo primero
+                        if prod_type == ECSDI.Producto_externo:
+                            ge = Graph()
                             # obtenemos la información de pago del vendedor externo
                             for vend_ext in gm.objects(subject=producto, predicate=ECSDI.Vendido_por):
                                 info_pago_ext = str(gm.value(subject=vend_ext, predicate=ECSDI.Forma_pago))
-                                g.add((subject_trans, ECSDI.Cuenta_origen, Literal(info_pago_ext, datatype=XSD.string)))
+                                subject_trans = ECSDI["Realizar_transferencia_" + str(mss_cnt)]
+                                ge.add((subject_trans, RDF.type, ECSDI.Realizar_transferencia))
+                                ge.add((subject_trans, ECSDI.Cuenta_origen, Literal(info_pago_ext, datatype=XSD.string)))
+                                ge.add((subject_trans, ECSDI.Cuenta_destino, Literal("MiTienda000", datatype=XSD.string)))
+                                ge.add((subject_trans, ECSDI.Importe, Literal(importe, datatype=XSD.float)))
+                                res = send_message_to_agent(ge, banco, subject_trans)
 
+                        # una vez conseguido el dinero del vendedor externo, se lo pagamos al cliente
                         res = send_message_to_agent(g, banco, subject_trans)
 
                     # una vez se ha realizado la transferencia, respondemos con un ACK
