@@ -172,7 +172,9 @@ def comunicacion():
                     destino = gm.value(subject=content, predicate=ECSDI.Cuenta_destino)
                     importe = gm.value(subject=content, predicate=ECSDI.Importe)
 
+                    logger.info("----------------------------------\n")
                     logger.info("Se ha realizado una transferencia de " + str(origen) + " a " + str(destino) + " de un total de " + str(importe) + " euros.")
+                    logger.info("----------------------------------\n")
 
                     gr = build_message(Graph(),
                         ACL['inform-done'],
