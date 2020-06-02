@@ -181,17 +181,11 @@ def send_message_to_agent(gmess, ragn, contentRes):
 def comunicacion():
     """
     Entrypoint de comunicacion del agente
-    Simplemente retorna un objeto fijo que representa una
-    respuesta a una busqueda de hotel
-    Asumimos que se reciben siempre acciones que se refieren a lo que puede hacer
-    el agente (buscar con ciertas restricciones, reservar)
-    Las acciones se mandan siempre con un Request
-    Prodriamos resolver las busquedas usando una performativa de Query-ref
     """
     global dsgraph
     global mss_cnt
 
-    logger.info('Peticion de informacion recibida')
+    logger.info('Peticion de cobro recibida')
 
     # Extraemos el mensaje y creamos un grafo con el
     message = request.args['content']
@@ -268,10 +262,10 @@ def comunicacion():
 
                     # si se han encontrado productos externos, procedemos a cobrar el importe para cada vendedor externo
                     if info_ext:
-                        ga = Graph()
                         logger.info("Se cobran los importes de productos externos.")
                         # por cada vendedor externo diferente le cobramos lo correspondido
                         for item in info_ext:
+                            ga = Graph()
                             subject_trans = ECSDI["Realizar_transferencia_" + str(mss_cnt)]
                             ga.add((subject_trans, RDF.type, ECSDI.Realizar_transferencia))
                             ga.add((subject_trans, ECSDI.Cuenta_origen, Literal("MiTienda000", datatype=XSD.string)))
