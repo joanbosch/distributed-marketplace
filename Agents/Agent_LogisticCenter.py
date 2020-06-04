@@ -52,8 +52,10 @@ else:
 
 if args.dport is None:
     dport = 9000
+    dtport = 9020
 else:
     dport = args.dport
+    dtport = 9020
 
 if args.dhost is None:
     dhostname = socket.gethostname()
@@ -80,6 +82,11 @@ DirectoryAgent = Agent('DirectoryAgent',
                        agn.Directory,
                        'http://%s:%d/Register' % (dhostname, dport),
                        'http://%s:%d/Stop' % (dhostname, dport))
+
+TransportDirectory = Agent('TransportExternaldirectory',
+                            agn.Diectory,
+                            'http://%s:%d/Register' % (dhostname, dtport),
+                            'http://%s:%d/Stop' % (dhostname, dtport))
 
 # Global dsgraph triplestore
 dsgraph = Graph()
@@ -167,7 +174,7 @@ def comunicacion():
         if perf == ACL['request']:
 
             # Contenido del pedido: ciudad destino + prioridad entrega + peso total pedido
-            logger.info('Peticion de envío de pedido')
+            logger.info('Peticion de envío de pedido.')
 
             # Añadimos el pedido al registro de lotes a enviar
             add_to_lote(gm, msgdic['content'])
@@ -212,7 +219,9 @@ def agentbehavior1(queue):
     gr = register_message()
 
     # Escuchando la cola hasta que llegue un 0
+    """
     fin = False
+    pass
     while not fin:
         while queue.empty():
             pass
@@ -224,6 +233,7 @@ def agentbehavior1(queue):
 
             # Selfdestruct
             # requests.get(LogisticCenterAgent.stop)
+    """
 
 def time_to_send():
 
@@ -302,7 +312,41 @@ def createSend():
             # Eliminamos Lote enviado
             removeLote(lote)
 
-      
+def getTransportAgents():
+    logger.info('Buscamos en el servicio de registro')
+
+    global mss_cnt
+    gmess = Graph()
+
+    gmess.bind('foaf', FOAF)
+    gmess.bind('dso', DSO)
+    reg_obj = agn[LogisticCenterAgent.name + '-Search']
+    gmess.add((reg_obj, RDF.type, DSO.Search))
+    gmess.add((reg_obj, DSO.AgentType, agn.ExternalTransportAgent))
+
+    msg = build_message(gmess, perf=ACL.request,
+                        sender=LogisticCenterAgent.uri,
+                        receiver=TransportDirectory.uri,
+                        content=reg_obj,
+                        msgcnt=mss_cnt)
+
+    gr = send_message(msg, TransportDirectory.address)
+    mss_cnt += 1
+    logger.info('Recibimos informacion de los agentes de Transporte.')
+
+    dic = get_message_properties(gr)
+    content = dic['content']
+    transportistas = []
+
+    for (s,p,o) in gr.triples((content, None, None)):
+        if str(p).startswith("http://www.w3.org/1999/02/22-rdf-syntax-ns#_"):
+            address = gr.value(subject=o, predicate=DSO.Address)
+            url = gr.value(subject=o, predicate=DSO.Uri)
+            name = gr.value(subject=o, predicate=FOAF.name)
+            transportist = Agent(name, url, address, None)
+            transportistas += [transportist]
+    
+    return transportistas
 
 def requestTransport(gr, content, pedido):
 
@@ -310,75 +354,93 @@ def requestTransport(gr, content, pedido):
     
     logger.info('Pedimos transporte a los Agentes Externos de Transporte')
 
-    TransportAg = get_agent_info(agn.ExternalTransportAgent)
+    #TransportAg = get_agent_info(agn.ExternalTransportAgent)
+    agentes_transporte = getTransportAgents()
+    TransportAg = None
+    mejor_precio = float("inf")
 
-    gr = send_message(
-        build_message(gr, 
-        perf = ACL['call-for-proposal'], 
+    for Transport in agentes_transporte:
+        logger.info("Mandamos una peticion de oferta de envio a un agente de Transporte" + str(Transport.name))
+        gr_res = send_message(
+            build_message(gr, 
+            perf = ACL['call-for-proposal'], 
+            sender = LogisticCenterAgent.uri, 
+            receiver = Transport.uri,
+            msgcnt = mss_cnt,
+            content = content), Transport.address)
+        
+
+        msgdic  = get_message_properties(gr_res)
+        performativa = msgdic['performative']
+
+        if performativa == ACL['propose']:
+
+            # El transportista nos envia un precio sobre el pedido propuesto enviado
+            logger.info('Recibimos el precio ofrecido por el transportista')
+            subjet = gr_res.subjects(RDF.type, ECSDI.Propuesta_transporte)
+            for s in subjet:
+                precio = float(gr_res.value(subject=s, predicate=ECSDI.Precio_envio))
+            
+            if precio < mejor_precio:
+                mejor_precio = precio
+                TransportAg = Transport
+
+    for trans in agentes_transporte:
+        if trans != TransportAg:
+            gr = send_message(build_message(Graph(), 
+                perf = ACL['reject-proposal'], 
+                sender = LogisticCenterAgent.uri, 
+                receiver = msgdic['sender'],
+                msgcnt = mss_cnt), TransportAg.address)
+
+    # Contra oferta sobre el precio propuesto por el transportista
+    logger.info('El Centro Logístico hace una contra oferta al transportista elegido.')
+
+    nuevo_precio = precio - (precio * (random.randint(1,15))/100)
+
+    g = Graph()
+
+    subjectGr = ECSDI['Enviar_controferta_' + str(mss_cnt)]
+    g.add((subjectGr, RDF.type, ECSDI.Enviar_contraoferta))
+    g.add((subjectGr, ECSDI.Precio_envio, Literal(precio, datatype=XSD.float)))
+    g.add((subjectGr, ECSDI.Precio_contraoferta, Literal(nuevo_precio, datatype=XSD.float)))
+
+    gr = send_message(build_message(g, 
+        perf = ACL.request, 
         sender = LogisticCenterAgent.uri, 
-        receiver = TransportAg.uri,
+        receiver = msgdic['sender'],
         msgcnt = mss_cnt,
-        content = content), TransportAg.address)
+        content = subjectGr), TransportAg.address)
 
     msgdic = get_message_properties(gr)
     performativa = msgdic['performative']
 
-    if performativa == ACL['propose']:
+    if performativa == ACL['accept']:
+        logger.info('El transportista elegido ha aceptado la contra oferta.')
 
-        # El transportista nos envia un precio sobre el pedido propuesto enviado
-        logger.info('Recibimos el precio ofrecido por el transportista')
-        subjet = gr.subjects(RDF.type, ECSDI.Propuesta_transporte)
-        for s in subjet:
-            precio = float(gr.value(subject=s, predicate=ECSDI.Precio_envio))
+        gr = send_message(build_message(Graph(), 
+        perf = ACL['inform'], 
+        sender = LogisticCenterAgent.uri, 
+        receiver = msgdic['sender'],
+        msgcnt = mss_cnt), TransportAg.address)
 
-        # Contra oferta sobre el precio propuesto por el transportista
-        logger.info('El Centro Logístico hace una contra oferta al transportista.')
+    elif performativa == ACL['reject']:
+        logger.info('El transportista elegido no ha aceptado la contra oferta.')
 
-        nuevo_precio = precio - (precio * (random.randint(1,15))/100)
+        gr = send_message(build_message(Graph(), 
+        perf = ACL['inform'], 
+        sender = LogisticCenterAgent.uri, 
+        receiver = msgdic['sender'],
+        msgcnt = mss_cnt), TransportAg.address)
 
-        g = Graph()
+    elif performativa == ACL['propose']:
+        logger.info('El transportista elegido ha enviado una nueva contra oferta.')
 
-        subjectGr = ECSDI['Enviar_controferta_' + str(mss_cnt)]
-        g.add((subjectGr, RDF.type, ECSDI.Enviar_contraoferta))
-        g.add((subjectGr, ECSDI.Precio_envio, Literal(precio, datatype=XSD.float)))
-        g.add((subjectGr, ECSDI.Precio_contraoferta, Literal(nuevo_precio, datatype=XSD.float)))
-
-        gr = send_message(build_message(g, 
-            perf = ACL.request, 
-            sender = LogisticCenterAgent.uri, 
-            receiver = msgdic['sender'],
-            msgcnt = mss_cnt,
-            content = subjectGr), TransportAg.address)
-
-        msgdic = get_message_properties(gr)
-        performativa = msgdic['performative']
-
-        if performativa == ACL['accept']:
-            logger.info('El transportista ha aceptado la contra oferta.')
-
-            gr = send_message(build_message(Graph(), 
-            perf = ACL['inform'], 
-            sender = LogisticCenterAgent.uri, 
-            receiver = msgdic['sender'],
-            msgcnt = mss_cnt), TransportAg.address)
-
-        elif performativa == ACL['reject']:
-            logger.info('El transportista no ha aceptado la contra oferta.')
-
-            gr = send_message(build_message(Graph(), 
-            perf = ACL['inform'], 
-            sender = LogisticCenterAgent.uri, 
-            receiver = msgdic['sender'],
-            msgcnt = mss_cnt), TransportAg.address)
-
-        elif performativa == ACL['propose']:
-            logger.info('El transportista ha enviado una nueva contra oferta.')
-
-            gr = send_message(build_message(Graph(), 
-            perf = ACL['inform'], 
-            sender = LogisticCenterAgent.uri, 
-            receiver = msgdic['sender'],
-            msgcnt = mss_cnt), TransportAg.address)
+        gr = send_message(build_message(Graph(), 
+        perf = ACL['inform'], 
+        sender = LogisticCenterAgent.uri, 
+        receiver = msgdic['sender'],
+        msgcnt = mss_cnt), TransportAg.address)
 
     logger.info('El pedido ha sido enviado correctamente.')
     logger.info('Enviamos un mensaje a Sales Procesor para informar que el pedido ha sido enviado.')

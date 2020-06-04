@@ -1,22 +1,11 @@
 @prefix ns1: <http://www.semanticweb.org/joan/ontologies/2020/3/practicaECSDI#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-ns1:pedido13 a ns1:Pedido ;
-    ns1:Productos ns1:Producto_Externo_1,
-        ns1:Producto_interno_3 .
-
-ns1:pedido16 a ns1:Pedido ;
-    ns1:Productos ns1:Producto_Externo_1,
-        ns1:Producto_interno_5 .
-
-ns1:pedido21 a ns1:Pedido ;
-    ns1:Productos ns1:Producto_Externo_1 .
+ns1:pedido1 a ns1:Pedido ;
+    ns1:Productos ns1:Producto_interno_6 .
 
 ns1:pedido4 a ns1:Pedido ;
-    ns1:Productos ns1:Producto_interno_3 .
-
-ns1:pedido8 a ns1:Pedido ;
-    ns1:Productos ns1:Producto_Externo_1 .
+    ns1:Productos ns1:Producto_interno_5 .
 
 ns1:Producto_interno_5 a ns1:Producto ;
     ns1:Marca "Nike"^^xsd:string ;
@@ -25,17 +14,10 @@ ns1:Producto_interno_5 a ns1:Producto ;
     ns1:Precio "62.25"^^xsd:float ;
     ns1:Tipo "calzado"^^xsd:string .
 
-ns1:Producto_interno_3 a ns1:Producto ;
-    ns1:Marca "Logitech"^^xsd:string ;
-    ns1:Nombre "Teclado USB"^^xsd:string ;
+ns1:Producto_interno_6 a ns1:Producto ;
+    ns1:Marca "Bic"^^xsd:string ;
+    ns1:Nombre "Pack 10 boligrafos azules"^^xsd:string ;
     ns1:Peso 1 ;
-    ns1:Precio "18.5"^^xsd:float ;
-    ns1:Tipo "tecnologia"^^xsd:string .
-
-ns1:Producto_Externo_1 a ns1:Producto ;
-    ns1:Marca "Apple"^^xsd:string ;
-    ns1:Nombre "iPad mini 4"^^xsd:string ;
-    ns1:Peso 300 ;
-    ns1:Precio "449.99"^^xsd:float ;
-    ns1:Tipo "tecnologia"^^xsd:string .
+    ns1:Precio "4.9"^^xsd:float ;
+    ns1:Tipo "papeleria"^^xsd:string .
 
