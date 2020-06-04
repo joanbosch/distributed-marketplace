@@ -78,8 +78,8 @@ agn = Namespace("http://www.agentes.org#")
 mss_cnt = 0
 
 # Datos del Agente
-ExternalTransportAgent = Agent('ExternalTransportAgent',
-                       agn.ExternalTransportAgent,
+ExternalTransportAgent_UPS = Agent('ExternalTransportAgent_UPS',
+                       agn.ExternalTransportAgent_UPS,
                        'http://%s:%d/comm' % (hostname, port),
                        'http://%s:%d/Stop' % (hostname, port))
 
@@ -111,17 +111,17 @@ def register_message():
     # Construimos el mensaje de registro
     gmess.bind('foaf', FOAF)
     gmess.bind('dso', DSO)
-    reg_obj = agn[ExternalTransportAgent.name + '-Register']
+    reg_obj = agn[ExternalTransportAgent_UPS.name + '-Register']
     gmess.add((reg_obj, RDF.type, DSO.Register))
-    gmess.add((reg_obj, DSO.Uri, ExternalTransportAgent.uri))
-    gmess.add((reg_obj, FOAF.name, Literal(ExternalTransportAgent.name)))
-    gmess.add((reg_obj, DSO.Address, Literal(ExternalTransportAgent.address)))
+    gmess.add((reg_obj, DSO.Uri, ExternalTransportAgent_UPS.uri))
+    gmess.add((reg_obj, FOAF.name, Literal(ExternalTransportAgent_UPS.name)))
+    gmess.add((reg_obj, DSO.Address, Literal(ExternalTransportAgent_UPS.address)))
     gmess.add((reg_obj, DSO.AgentType, agn.ExternalTransportAgent))
 
     # Lo metemos en un envoltorio FIPA-ACL y lo enviamos
     gr = send_message(
         build_message(gmess, perf=ACL.request,
-                      sender=ExternalTransportAgent.uri,
+                      sender=ExternalTransportAgent_UPS.uri,
                       receiver=DirectoryAgent.uri,
                       content=reg_obj,
                       msgcnt=mss_cnt),
@@ -131,9 +131,9 @@ def register_message():
     return gr
 
 def make_proposal(gm, content, send_to):
-    peso = gm.value(subject=content, predicate=ECSDI.Peso)
+    peso = float(gm.value(subject=content, predicate=ECSDI.Peso))
     entrega = datetime.datetime.now() + datetime.timedelta(days=1)
-    precio = peso * randrange(1, 10)
+    precio = peso * float(randrange(10, 30)/30)
 
     g = Graph()
     subject = ECSDI['Precio_Transporte'+str(mss_cnt)]
@@ -141,7 +141,7 @@ def make_proposal(gm, content, send_to):
     g.add((subject, ECSDI.Precio_envio, Literal(precio, datatype = XSD.float)))
     g.add((subject, ECSDI.Fecha_Entrega, Literal(entrega, datatype = XSD.dateTime)))
 
-    g = build_message(g, ACL['propose'], sender=ExternalTransportAgent.uri, msgcnt=mss_cnt, receiver=send_to)
+    g = build_message(g, ACL['propose'], sender=ExternalTransportAgent_UPS.uri, msgcnt=mss_cnt, receiver=send_to)
     
     logger.info("We are sending a proposal. Weight of the package: " + str(peso) + "Limit: " + str(entrega) + " and price: " + str(precio) + "." )
 
@@ -156,7 +156,7 @@ def make_counter_offer(old_price,  send_to, discount):
     g.add((subjectGr, ECSDI.Precio_envio, Literal(old_price, datatype=XSD.float)))
     g.add((subjectGr, ECSDI.Precio_contraoferta, Literal(nuevo_precio, datatype=XSD.float)))
 
-    g = build_message(g, ACL['propose'], sender=ExternalTransportAgent.uri, msgcnt=mss_cnt, receiver=send_to)
+    g = build_message(g, ACL['propose'], sender=ExternalTransportAgent_UPS.uri, msgcnt=mss_cnt, receiver=send_to)
     
     logger.info("We are sending a counter-proposal.")
 
@@ -204,7 +204,7 @@ def comunicacion():
     global dsgraph
     global mss_cnt
 
-    logger.info('Peticion de informacion recibida')
+    logger.info('Peticion de informacion recibida al transportsita UPS.')
 
     # Extraemos el mensaje y creamos un grafo con el
     message = request.args['content']
@@ -216,7 +216,7 @@ def comunicacion():
     # Comprobamos que sea un mensaje FIPA ACL
     if msgdic is None:
         # Si no es, respondemos que no hemos entendido el mensaje
-        gr = build_message(Graph(), ACL['not-understood'], sender=ExternalTransportAgent.uri, msgcnt=mss_cnt)
+        gr = build_message(Graph(), ACL['not-understood'], sender=ExternalTransportAgent_UPS.uri, msgcnt=mss_cnt)
     else:
         # Obtenemos la performativa
         perf = msgdic['performative']
@@ -227,13 +227,22 @@ def comunicacion():
             gr = make_proposal(gm, msgdic['content'], msgdic['sender'])
         
         # Si se accepta la propuesta del transportista, entonces se debe enviar el pedidio.
-        elif perf == ACL['accept-proposal'] or perf == ACL['reject-proposal']:
-            logger.info("Proposal has been accepted.")
+        elif perf == ACL['accept-proposal']:
+            logger.info("La proposicón ha sido ACEPTADA por el centro logístico.")
             gr = build_message(Graph(),
                 ACL['inform'],
-                sender=ExternalTransportAgent.uri,
+                sender=ExternalTransportAgent_UPS.uri,
                 msgcnt=mss_cnt,
                 receiver=msgdic['sender'])
+
+        elif perf == ACL['reject-proposal']:
+            logger.info("La proposicion NO ha sido ACEPTADA por el centro logística.")
+            gr = build_message(Graph(),
+                ACL['inform'],
+                sender=ExternalTransportAgent_UPS.uri,
+                msgcnt=mss_cnt,
+                receiver=msgdic['sender'])
+
         elif perf == ACL.request:
 
             if 'content' in msgdic:
@@ -242,7 +251,7 @@ def comunicacion():
                 
                 # If the external seller want to add products in our shop.
                 if accion == ECSDI.Enviar_contraoferta:
-                    logger.info("Se ha recibido una contraoferta.")
+                    logger.info("Se ha recibido una contra oferta.")
                     precio_inicial = 0
                     precio_oferta = 0
                     for subj in gm.subjects(RDF.type, ECSDI.Enviar_contraoferta):
@@ -252,27 +261,27 @@ def comunicacion():
                     descuento = 100 - (precio_oferta/precio_inicial)*100
 
                     if descuento < 6:
-                        logger.info("Se accepta la contra-oferta.")
+                        logger.info("Se accepta la contra oferta.")
                         gr = build_message(Graph(),
                             ACL['accept'],
-                            sender=ExternalTransportAgent.uri,
+                            sender=ExternalTransportAgent_UPS.uri,
                             msgcnt=mss_cnt,
                             receiver=msgdic['sender'])
                     
                     elif descuento < 11:
-                        logger.info("Se va a ofrecer una nueva contra-oferta al centro logísitco.")
+                        logger.info("Se va a ofrecer una nueva contra oferta al centro logísitco.")
                         gr = make_counter_offer(precio_inicial, msgdic['sender'], descuento)
                     elif descuento > 10:
-                        logger.info("Se rechaza la contra-oferta proporcionada por el centro logístico.")
+                        logger.info("Se rechaza la contra oferta proporcionada por el centro logístico.")
                         gr = build_message(Graph(),
                             ACL['reject'],
-                            sender=ExternalTransportAgent.uri,
+                            sender=ExternalTransportAgent_UPS.uri,
                             msgcnt=mss_cnt,
                             receiver=msgdic['sender'])
         elif perf == ACL['inform']:
             gr = build_message(Graph(),
                 ACL['inform'],
-                sender=ExternalTransportAgent.uri,
+                sender=ExternalTransportAgent_UPS.uri,
                 msgcnt=mss_cnt,
                 receiver=msgdic['sender'])
 
@@ -302,9 +311,6 @@ def agentbehavior1():
     # Registramos el agente
     gr = register_message()
 
-
-    # Selfdestruct
-    #requests.get(ExternalTransportAgent1.stop)
 
 
 if __name__ == '__main__':

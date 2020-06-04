@@ -1,69 +1,114 @@
 @prefix ns1: <http://www.semanticweb.org/joan/ontologies/2020/3/practicaECSDI#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-ns1:Producto_Externo_1 a ns1:Producto_externo ;
-    ns1:Marca "Apple"^^xsd:string ;
-    ns1:Nombre "iPad mini 4"^^xsd:string ;
-    ns1:Peso 300 ;
-    ns1:Precio "449.99"^^xsd:float ;
-    ns1:Tipo "tecnologia"^^xsd:string ;
-    ns1:Vendido_por ns1:Vendedor_externo1 .
-
-ns1:Producto_Externo_5 a ns1:Producto_externo ;
-    ns1:Marca "Corsair"^^xsd:string ;
-    ns1:Nombre "RAM DDR4 16GB"^^xsd:string ;
-    ns1:Peso 20 ;
-    ns1:Precio "99.99"^^xsd:float ;
-    ns1:Tipo "tecnologia"^^xsd:string ;
-    ns1:Vendido_por ns1:Vendedor_externo5 .
-
 ns1:Producto_interno_1 a ns1:Producto_interno ;
     ns1:Marca "Apple"^^xsd:string ;
     ns1:Nombre "iPhone 11"^^xsd:string ;
-    ns1:Peso 1 ;
+    ns1:Peso 194 ;
     ns1:Precio "809.0"^^xsd:float ;
     ns1:Tipo "tecnologia"^^xsd:string .
 
 ns1:Producto_interno_2 a ns1:Producto_interno ;
     ns1:Marca "Lenovo"^^xsd:string ;
     ns1:Nombre "Portatil Lenovo ideaPad"^^xsd:string ;
-    ns1:Peso 3 ;
+    ns1:Peso 1440 ;
     ns1:Precio "660.0"^^xsd:float ;
     ns1:Tipo "tecnologia"^^xsd:string .
 
 ns1:Producto_interno_3 a ns1:Producto_interno ;
     ns1:Marca "Logitech"^^xsd:string ;
     ns1:Nombre "Teclado USB"^^xsd:string ;
-    ns1:Peso 1 ;
+    ns1:Peso 346 ;
     ns1:Precio "18.5"^^xsd:float ;
     ns1:Tipo "tecnologia"^^xsd:string .
 
 ns1:Producto_interno_4 a ns1:Producto_interno ;
     ns1:Marca "Apple"^^xsd:string ;
     ns1:Nombre "MacBook Pro 128GB"^^xsd:string ;
-    ns1:Peso 3 ;
+    ns1:Peso 1600 ;
     ns1:Precio "1500.0"^^xsd:float ;
     ns1:Tipo "tecnologia"^^xsd:string .
 
 ns1:Producto_interno_5 a ns1:Producto_interno ;
     ns1:Marca "Nike"^^xsd:string ;
     ns1:Nombre "Zapatillas deportivas Nike"^^xsd:string ;
-    ns1:Peso 2 ;
+    ns1:Peso 250 ;
     ns1:Precio "62.25"^^xsd:float ;
     ns1:Tipo "calzado"^^xsd:string .
 
 ns1:Producto_interno_6 a ns1:Producto_interno ;
     ns1:Marca "Bic"^^xsd:string ;
     ns1:Nombre "Pack 10 boligrafos azules"^^xsd:string ;
-    ns1:Peso 1 ;
+    ns1:Peso 60 ;
     ns1:Precio "4.9"^^xsd:float ;
     ns1:Tipo "papeleria"^^xsd:string .
 
-ns1:Vendedor_externo1 a ns1:Vendedor_externo ;
-    ns1:Forma_pago "1234567"^^xsd:string ;
-    ns1:Nombre "Apple"^^xsd:string .
+ns1:Producto_interno_7 a ns1:Producto_interno ;
+    ns1:Marca "Blue Microphones"^^xsd:string ;
+    ns1:Nombre "Blue Microphones Yeti 11"^^xsd:string ;
+    ns1:Peso 1028 ;
+    ns1:Precio "125.0"^^xsd:float ;
+    ns1:Tipo "tecnologia"^^xsd:string .
 
-ns1:Vendedor_externo5 a ns1:Vendedor_externo ;
-    ns1:Forma_pago "PCCOMPONENTES"^^xsd:string ;
-    ns1:Nombre "PcComponentes"^^xsd:string .
+ns1:Producto_interno_8 a ns1:Producto_interno ;
+    ns1:Marca "Logitech"^^xsd:string ;
+    ns1:Nombre "Logitech HD Webcam C270"^^xsd:string ;
+    ns1:Peso 30 ;
+    ns1:Precio "75"^^xsd:float ;
+    ns1:Tipo "tecnologia"^^xsd:string .
 
+ns1:Producto_interno_9 a ns1:Producto_interno ;
+    ns1:Marca "Amazon"^^xsd:string ;
+    ns1:Nombre "Echo Dot"^^xsd:string ;
+    ns1:Peso 300 ;
+    ns1:Precio "59.99"^^xsd:float ;
+    ns1:Tipo "tecnologia"^^xsd:string .
+
+ns1:Producto_interno_10 a ns1:Producto_interno ;
+    ns1:Marca "MEKEET"^^xsd:string ;
+    ns1:Nombre "Cepillo y soporte para inodoro de silicona"^^xsd:string ;
+    ns1:Peso 381 ;
+    ns1:Precio "14.99"^^xsd:float ;
+    ns1:Tipo "hogar"^^xsd:string .
+
+ns1:Producto_interno_11 a ns1:Producto_interno ;
+    ns1:Marca "LEVIVO"^^xsd:string ;
+    ns1:Nombre "Juego de utensilios de cocina"^^xsd:string ;
+    ns1:Peso 299 ;
+    ns1:Precio "32.43"^^xsd:float ;
+    ns1:Tipo "hogar"^^xsd:string .
+
+ns1:Producto_interno_12 a ns1:Producto_interno ;
+    ns1:Marca "SONGMICS"^^xsd:string ;
+    ns1:Nombre "Silla giratoria de Oficina"^^xsd:string ;
+    ns1:Peso 19000 ;
+    ns1:Precio "105.22"^^xsd:float ;
+    ns1:Tipo "hogar"^^xsd:string .    
+
+ns1:Producto_interno_13 a ns1:Producto_interno ;
+    ns1:Marca "nalgene"^^xsd:string ;
+    ns1:Nombre "Cantimplora de Agua"^^xsd:string ;
+    ns1:Peso 136 ;
+    ns1:Precio "8.59"^^xsd:float ;
+    ns1:Tipo "hogar"^^xsd:string . 
+
+ns1:Producto_interno_14 a ns1:Producto_interno ;
+    ns1:Marca "FAIRY"^^xsd:string ;
+    ns1:Nombre "Pastillas lavavajillas original limón, 125 cápsulas"^^xsd:string ;
+    ns1:Peso 1970 ;
+    ns1:Precio "15.95"^^xsd:float ;
+    ns1:Tipo "hogar"^^xsd:string . 
+
+ns1:Producto_interno_15 a ns1:Producto_interno ;
+    ns1:Marca "Scottex"^^xsd:string ;
+    ns1:Nombre "Scottex Original Papel Higiénico"^^xsd:string ;
+    ns1:Peso 700 ;
+    ns1:Precio "20.99"^^xsd:float ;
+    ns1:Tipo "hogar"^^xsd:string . 
+
+ns1:Producto_interno_16 a ns1:Producto_interno ;
+    ns1:Marca "Microsoft"^^xsd:string ;
+    ns1:Nombre "Microsoft Xbox One S All Digital"^^xsd:string ;
+    ns1:Peso 2900 ;
+    ns1:Precio "236"^^xsd:float ;
+    ns1:Tipo "tecnologia"^^xsd:string .

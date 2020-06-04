@@ -22,10 +22,10 @@ import socket
 import argparse
 
 from flask import Flask, request, render_template
-from rdflib import Graph, RDF, Namespace, RDFS
+from rdflib import Graph, RDF, Namespace, RDFS, BNode, URIRef
 from rdflib.namespace import FOAF
 
-from AgentUtil.OntoNamespaces import ACL, DSO
+from AgentUtil.OntoNamespaces import ACL, DSO, ECSDI
 from AgentUtil.FlaskServer import shutdown_server
 from AgentUtil.Agent import Agent
 from AgentUtil.ACLMessages import build_message, get_message_properties
@@ -152,6 +152,68 @@ def register():
                 sender=DirectoryAgent.uri,
                 msgcnt=mss_cnt)
 
+    def process_search_transport():
+        # Asumimos que hay una accion de busqueda que puede tener
+        # diferentes parametros en funcion de si se busca un tipo de agente
+        # o un agente concreto por URI o nombre
+        # Podriamos resolver esto tambien con un query-ref y enviar un objeto de
+        # registro con variables y constantes
+
+        # Solo consideramos cuando Search indica el tipo de agente
+        # Buscamos una coincidencia exacta
+        # Retornamos el primero de la lista de posibilidades
+
+        logger.info('Peticion de busqueda')
+
+        agn_type = gm.value(subject=content, predicate=DSO.AgentType)
+        rsearch = dsgraph.triples((None, DSO.AgentType, agn_type))
+        print(rsearch)
+
+        # Debemos buscar todos los transportistas registrados y devolver sus datos.
+        gr = Graph()
+        gr.bind('dso', DSO)
+
+        all_transp = BNode()
+        gr.add((all_transp, RDF.type, RDF.Bag))
+        i = 0
+        for agn_uri in rsearch:
+            logger.info("Añadiendo un nuevo agente de transporte.")
+            
+            agn_name = dsgraph.value(subject=agn_uri[0], predicate=FOAF.name)
+            logger.info("Obteniendo Nombre del Agente." + str(agn_name))
+            logger.info("Obteniendo URI del agente.")
+            agn_add = dsgraph.value(subject=agn_uri[0], predicate=DSO.Address)
+            
+            logger.info("Añadiendo parametros al grafo.")
+            rsp_obj = agn['Directory-response' + str(i)]
+            logger.info("Añadiendo Direccion del agente al grafo.")
+            gr.add((rsp_obj, DSO.Address, agn_add))
+            logger.info("Añadiendo URI del Agente al grafo.")
+            gr.add((rsp_obj, DSO.Uri, agn_uri[0]))
+            logger.info("Agadiendo Nombre del agente al Grafo")
+            gr.add((rsp_obj, FOAF.name, agn_name))
+            logger.info("Añadiendo Bag del agente al Grafo")
+            gr.add((all_transp, URIRef('http://www.w3.org/1999/02/22-rdf-syntax-ns#_'+ str(i)), rsp_obj))
+            
+            logger.info("Siguiente Agente")
+            i += 1
+
+        logger.info("Salimos del bucle")
+        if rsearch is not None:
+            logger.info("Montamos el mensaje.")
+            return build_message(gr,
+                                 ACL.inform,
+                                 sender=DirectoryAgent.uri,
+                                 msgcnt=mss_cnt,
+                                 content=all_transp)
+        else:
+            # Si no encontramos nada retornamos un inform sin contenido
+            logger.info("Montamos un mensaje sin contenido.")
+            return build_message(Graph(),
+                ACL.inform,
+                sender=DirectoryAgent.uri,
+                msgcnt=mss_cnt)
+
     global dsgraph
     global mss_cnt
     # Extraemos el mensaje y creamos un grafo con él
@@ -190,6 +252,8 @@ def register():
             elif accion == DSO.Search:
                 gr = process_search()
             # No habia ninguna accion en el mensaje
+            elif accion == ECSDI.Transport:
+                gr = process_search_transport()
             else:
                 gr = build_message(Graph(),
                         ACL['not-understood'],
@@ -230,9 +294,11 @@ def tidyup():
 
 
 def agentbehavior1(cola):
+
     """
     Behaviour que simplemente espera mensajes de una cola y los imprime
     hasta que llega un 0 a la cola
+    """
     """
     fin = False
     while not fin:
@@ -244,6 +310,7 @@ def agentbehavior1(cola):
             return 0
         else:
             print(v)
+    """
 
 
 if __name__ == '__main__':

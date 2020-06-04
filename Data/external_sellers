@@ -1,11 +1,2 @@
-@prefix ns1: <http://www.semanticweb.org/joan/ontologies/2020/3/practicaECSDI#> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-ns1:Vendedor_externo_330 a ns1:Vendedor_externo ;
-    ns1:Forma_pago "1234567"^^xsd:string ;
-    ns1:Nombre "Apple"^^xsd:string .
-
-ns1:Vendedor_externo_672 a ns1:Vendedor_externo ;
-    ns1:Forma_pago "PCCOMPONENTES"^^xsd:string ;
-    ns1:Nombre "PcComponentes"^^xsd:string .
 
