@@ -59,7 +59,7 @@ else:
     hostname = socket.gethostname()
 
 if args.dport is None:
-    dport = 9020
+    dport = 9000
 else:
     dport = args.dport
 
@@ -131,9 +131,9 @@ def register_message():
     return gr
 
 def make_proposal(gm, content, send_to):
-    peso = gm.value(subject=content, predicate=ECSDI.Peso)
+    peso = float(gm.value(subject=content, predicate=ECSDI.Peso))
     entrega = datetime.datetime.now() + datetime.timedelta(days=1)
-    precio = peso * randrange(1, 10)
+    precio = peso * float(randrange(10, 30)/30)
 
     g = Graph()
     subject = ECSDI['Precio_Transporte'+str(mss_cnt)]

@@ -52,10 +52,8 @@ else:
 
 if args.dport is None:
     dport = 9000
-    dtport = 9020
 else:
     dport = args.dport
-    dtport = 9020
 
 if args.dhost is None:
     dhostname = socket.gethostname()
@@ -82,11 +80,6 @@ DirectoryAgent = Agent('DirectoryAgent',
                        agn.Directory,
                        'http://%s:%d/Register' % (dhostname, dport),
                        'http://%s:%d/Stop' % (dhostname, dport))
-
-TransportDirectory = Agent('TransportExternaldirectory',
-                            agn.Diectory,
-                            'http://%s:%d/Register' % (dhostname, dtport),
-                            'http://%s:%d/Stop' % (dhostname, dtport))
 
 # Global dsgraph triplestore
 dsgraph = Graph()
@@ -321,16 +314,16 @@ def getTransportAgents():
     gmess.bind('foaf', FOAF)
     gmess.bind('dso', DSO)
     reg_obj = agn[LogisticCenterAgent.name + '-Search']
-    gmess.add((reg_obj, RDF.type, DSO.Search))
+    gmess.add((reg_obj, RDF.type, ECSDI.Transport))
     gmess.add((reg_obj, DSO.AgentType, agn.ExternalTransportAgent))
 
     msg = build_message(gmess, perf=ACL.request,
                         sender=LogisticCenterAgent.uri,
-                        receiver=TransportDirectory.uri,
+                        receiver=DirectoryAgent.uri,
                         content=reg_obj,
                         msgcnt=mss_cnt)
 
-    gr = send_message(msg, TransportDirectory.address)
+    gr = send_message(msg, DirectoryAgent.address)
     mss_cnt += 1
     logger.info('Recibimos informacion de los agentes de Transporte.')
 

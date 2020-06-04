@@ -1,22 +1,6 @@
 @prefix ns1: <http://www.semanticweb.org/joan/ontologies/2020/3/practicaECSDI#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-ns1:Producto_Externo_1 a ns1:Producto_externo ;
-    ns1:Marca "Apple"^^xsd:string ;
-    ns1:Nombre "iPad mini 4"^^xsd:string ;
-    ns1:Peso 300 ;
-    ns1:Precio "449.99"^^xsd:float ;
-    ns1:Tipo "tecnologia"^^xsd:string ;
-    ns1:Vendido_por ns1:Vendedor_externo1 .
-
-ns1:Producto_Externo_5 a ns1:Producto_externo ;
-    ns1:Marca "Corsair"^^xsd:string ;
-    ns1:Nombre "RAM DDR4 16GB"^^xsd:string ;
-    ns1:Peso 20 ;
-    ns1:Precio "99.99"^^xsd:float ;
-    ns1:Tipo "tecnologia"^^xsd:string ;
-    ns1:Vendido_por ns1:Vendedor_externo5 .
-
 ns1:Producto_interno_1 a ns1:Producto_interno ;
     ns1:Marca "Apple"^^xsd:string ;
     ns1:Nombre "iPhone 11"^^xsd:string ;
@@ -58,12 +42,3 @@ ns1:Producto_interno_6 a ns1:Producto_interno ;
     ns1:Peso 1 ;
     ns1:Precio "4.9"^^xsd:float ;
     ns1:Tipo "papeleria"^^xsd:string .
-
-ns1:Vendedor_externo1 a ns1:Vendedor_externo ;
-    ns1:Forma_pago "1234567"^^xsd:string ;
-    ns1:Nombre "Apple"^^xsd:string .
-
-ns1:Vendedor_externo5 a ns1:Vendedor_externo ;
-    ns1:Forma_pago "PCCOMPONENTES"^^xsd:string ;
-    ns1:Nombre "PcComponentes"^^xsd:string .
-
