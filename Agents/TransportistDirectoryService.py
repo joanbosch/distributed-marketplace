@@ -156,7 +156,7 @@ def register():
             logger.info("Agadiendo Nombre del agente al Grafo")
             gr.add((rsp_obj, FOAF.name, agn_name))
             logger.info("Añadiendo Bag del agente al Grafo")
-            gr.add((all_transp, URIRef(u'http://www.w3.org/1999/02/22-rdf-syntax-ns#_'+ str(i)), rsp_obj))
+            gr.add((all_transp, URIRef('http://www.w3.org/1999/02/22-rdf-syntax-ns#_'+ str(i)), rsp_obj))
             
             logger.info("Siguiente Agente")
             i += 1

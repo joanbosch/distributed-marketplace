@@ -387,11 +387,12 @@ def requestTransport(gr, content, pedido):
 
     for trans in agentes_transporte:
         if trans != TransportAg:
+            logger.info("Informamos al agente " + str(trans.name) + " que no ha sido elegido.")
             gr = send_message(build_message(Graph(), 
                 perf = ACL['reject-proposal'], 
                 sender = LogisticCenterAgent.uri, 
                 receiver = msgdic['sender'],
-                msgcnt = mss_cnt), TransportAg.address)
+                msgcnt = mss_cnt), trans.address)
 
     # Contra oferta sobre el precio propuesto por el transportista
     logger.info('El Centro Logístico hace una contra oferta al transportista elegido.')

@@ -4,8 +4,50 @@
 ns1:pedido1 a ns1:Pedido ;
     ns1:Productos ns1:Producto_interno_6 .
 
+ns1:pedido10 a ns1:Pedido ;
+    ns1:Productos ns1:Producto_interno_1,
+        ns1:Producto_interno_2 .
+
+ns1:pedido13 a ns1:Pedido ;
+    ns1:Productos ns1:Producto_interno_1,
+        ns1:Producto_interno_2,
+        ns1:Producto_interno_6 .
+
+ns1:pedido16 a ns1:Pedido ;
+    ns1:Productos ns1:Producto_interno_1,
+        ns1:Producto_interno_2,
+        ns1:Producto_interno_5 .
+
+ns1:pedido19 a ns1:Pedido ;
+    ns1:Productos ns1:Producto_interno_3 .
+
 ns1:pedido4 a ns1:Pedido ;
     ns1:Productos ns1:Producto_interno_5 .
+
+ns1:pedido7 a ns1:Pedido ;
+    ns1:Productos ns1:Producto_interno_1,
+        ns1:Producto_interno_5 .
+
+ns1:Producto_interno_3 a ns1:Producto ;
+    ns1:Marca "Logitech"^^xsd:string ;
+    ns1:Nombre "Teclado USB"^^xsd:string ;
+    ns1:Peso 1 ;
+    ns1:Precio "18.5"^^xsd:float ;
+    ns1:Tipo "tecnologia"^^xsd:string .
+
+ns1:Producto_interno_6 a ns1:Producto ;
+    ns1:Marca "Bic"^^xsd:string ;
+    ns1:Nombre "Pack 10 boligrafos azules"^^xsd:string ;
+    ns1:Peso 1 ;
+    ns1:Precio "4.9"^^xsd:float ;
+    ns1:Tipo "papeleria"^^xsd:string .
+
+ns1:Producto_interno_2 a ns1:Producto ;
+    ns1:Marca "Lenovo"^^xsd:string ;
+    ns1:Nombre "Portatil Lenovo ideaPad"^^xsd:string ;
+    ns1:Peso 3 ;
+    ns1:Precio "660.0"^^xsd:float ;
+    ns1:Tipo "tecnologia"^^xsd:string .
 
 ns1:Producto_interno_5 a ns1:Producto ;
     ns1:Marca "Nike"^^xsd:string ;
@@ -14,10 +56,10 @@ ns1:Producto_interno_5 a ns1:Producto ;
     ns1:Precio "62.25"^^xsd:float ;
     ns1:Tipo "calzado"^^xsd:string .
 
-ns1:Producto_interno_6 a ns1:Producto ;
-    ns1:Marca "Bic"^^xsd:string ;
-    ns1:Nombre "Pack 10 boligrafos azules"^^xsd:string ;
+ns1:Producto_interno_1 a ns1:Producto ;
+    ns1:Marca "Apple"^^xsd:string ;
+    ns1:Nombre "iPhone 11"^^xsd:string ;
     ns1:Peso 1 ;
-    ns1:Precio "4.9"^^xsd:float ;
-    ns1:Tipo "papeleria"^^xsd:string .
+    ns1:Precio "809.0"^^xsd:float ;
+    ns1:Tipo "tecnologia"^^xsd:string .
 
