@@ -1,10 +1,7 @@
 """
-Agente Procesador de Compras. Realiza busquedas de productos, registra compras (delegando el envio al centro logistico) y gestiona devoluciones.
+Agente Procesador de Compras. 
+Realiza busquedas de productos, registra compras (delegando el envio al centro logistico) y gestiona devoluciones.
 
-/comm es la entrada para la recepcion de mensajes del agente
-/Stop es la entrada que para el agente
-Asume que el agente de registro esta en el puerto 9000
-@author: javier
 """
 
 from multiprocessing import Process, Queue

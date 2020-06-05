@@ -1,11 +1,7 @@
 """
-Created on Fri Dec 27 15:58:13 2013
-Esqueleto de agente usando los servicios web de Flask
-/comm es la entrada para la recepcion de mensajes del agente
-/Stop es la entrada que para el agente
-Tiene una funcion AgentBehavior1 que se lanza como un thread concurrente
-Asume que el agente de registro esta en el puerto 9000
-@author: javier
+Agente externo de vendedores externos. 
+Se comunica con el agente Procesador Compras para gestionar los vendedores externos.
+
 """
 
 from multiprocessing import Process, Queue
@@ -279,7 +275,6 @@ def comunicacion():
                     for s in subj:
                         nombre = str(gm.value(s, ECSDI.Nombre))
                     
-                    logger.info("Nom que envia la Clara: "+ nombre)
                     if is_external_seller(nombre):
 
                         subject = ECSDI['Responder_Acuerdo_Tienda'+str(mss_cnt)]
@@ -321,7 +316,6 @@ def comunicacion():
                         nombre = str(gm.value(subject=ext_sell, predicate=ECSDI.Nombre))
                         forma_pago = str(gm.value(subject=ext_sell, predicate=ECSDI.Forma_pago))
 
-                    logger.info("Nom que em passa la Clara:" + nombre)
                     if is_external_seller(nombre):
 
                         

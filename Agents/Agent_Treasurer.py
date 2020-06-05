@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-filename: SimpleInfoAgent
-Antes de ejecutar hay que añadir la raiz del proyecto a la variable PYTHONPATH
-Agente que se registra como agente de hoteles y espera peticiones
-@author: javier
+Agente Tesorero. 
+Gestiona las peticiones de cobro y pago entre la tienda, el usuario y los vendedores externos.
+
 """
 
 from multiprocessing import Process, Queue

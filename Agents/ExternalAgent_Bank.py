@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-filename: ExternalAgent_Bank
-Agente que implementa la gestión de transferencias de din
+Agente Externo Banco. 
+Realiza las transferencias del dinero de una cuenta a otra.
+
 """
 
 from multiprocessing import Process, Queue

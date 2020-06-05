@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+"""
+Agente Externo de Vendedor Externo. 
+Agente implementa la interacción con un vendedor externo.
+
+"""
 
 from multiprocessing import Process
 import socket

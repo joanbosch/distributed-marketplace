@@ -13,8 +13,6 @@ El registro no es persistente y se mantiene mientras el agente funciona
 Las acciones que se pueden usar estan definidas en la ontología
 directory-service-ontology.owl
 
-
-@author: javier
 """
 
 from multiprocessing import Process, Queue

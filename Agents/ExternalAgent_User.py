@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-filename: ExternalUserAgent
-
-Agente que busca en el directorio y llama al agente obtenido (agente SaleProcessor)
+Agente Externo Usuario.
 Agente que implementa la interaccion con el usuario
 
-@author: javier
 """
 
 from multiprocessing import Process

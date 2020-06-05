@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-
-    AGENTE CENTRO LOGISTICO
+Agente Centro Logístico. 
+Gestiona los lotes y gestiona el transporte de un pedido.
 
 """
 
