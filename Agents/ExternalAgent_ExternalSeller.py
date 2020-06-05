@@ -326,10 +326,6 @@ def agentbehavior1():
     gr = register_message()
 
 
-    # Selfdestruct
-    #requests.get(ExternalTransportAgent1.stop)
-
-
 if __name__ == '__main__':
     # Ponemos en marcha los behaviors
     ab1 = Process(target=agentbehavior1)

@@ -136,7 +136,7 @@ def make_proposal(gm, content, send_to):
 
     g = build_message(g, ACL['propose'], sender=ExternalTransportAgent_UPS.uri, msgcnt=mss_cnt, receiver=send_to)
     
-    logger.info("We are sending a proposal. Weight of the package: " + str(peso) + "Limit: " + str(entrega) + " and price: " + str(precio) + "." )
+    logger.info("Se envia una propuesta de envio. Peso del paquete: " + str(peso) + "Limite entrega: " + str(entrega) + " y  precio: " + str(precio) + "." )
 
     return g
 
@@ -151,7 +151,7 @@ def make_counter_offer(old_price,  send_to, discount):
 
     g = build_message(g, ACL['propose'], sender=ExternalTransportAgent_UPS.uri, msgcnt=mss_cnt, receiver=send_to)
     
-    logger.info("We are sending a counter-proposal.")
+    logger.info("Se envia una contra oferta.")
 
     return g
     
