@@ -1,0 +1,27 @@
+@prefix ns1: <http://www.semanticweb.org/joan/ontologies/2020/3/practicaECSDI#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ns1:pedido2 a ns1:Pedido ;
+    ns1:Ciudad_Destino "Barcelona"^^xsd:string ;
+    ns1:Fecha_Pedido "2020-05-20T12:29:20.535113"^^xsd:dateTime ;
+    ns1:Informacion_Pago "VisaCliente"^^xsd:string ;
+    ns1:Peso_total_pedido 304 ;
+    ns1:Precio_total_pedido "132.43"^^xsd:float ;
+    ns1:Prioridad_Entrega "normal"^^xsd:string ;
+    ns1:Productos_Pedido ns1:Producto_Externo_1,
+        ns1:Producto_interno_11 .
+
+ns1:Producto_Externo_1 a ns1:Producto ;
+    ns1:Marca "RayBan"^^xsd:string ;
+    ns1:Nombre "Gafas de Sol"^^xsd:string ;
+    ns1:Peso 5 ;
+    ns1:Precio "100.0"^^xsd:float ;
+    ns1:Tipo "Moda"^^xsd:string .
+
+ns1:Producto_interno_11 a ns1:Producto ;
+    ns1:Marca "LEVIVO"^^xsd:string ;
+    ns1:Nombre "Juego de utensilios de cocina"^^xsd:string ;
+    ns1:Peso 299 ;
+    ns1:Precio "32.43"^^xsd:float ;
+    ns1:Tipo "hogar"^^xsd:string .
+

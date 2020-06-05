@@ -1,11 +1,68 @@
 @prefix ns1: <http://www.semanticweb.org/joan/ontologies/2020/3/practicaECSDI#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
+ns1:Producto_Externo_1 a ns1:Producto_externo ;
+    ns1:Marca "RayBan"^^xsd:string ;
+    ns1:Nombre "Gafas de Sol"^^xsd:string ;
+    ns1:Peso 5 ;
+    ns1:Precio "100.0"^^xsd:float ;
+    ns1:Tipo "Moda"^^xsd:string ;
+    ns1:Vendido_por ns1:Vendedor_externo1 .
+
 ns1:Producto_interno_1 a ns1:Producto_interno ;
     ns1:Marca "Apple"^^xsd:string ;
     ns1:Nombre "iPhone 11"^^xsd:string ;
     ns1:Peso 194 ;
     ns1:Precio "809.0"^^xsd:float ;
+    ns1:Tipo "tecnologia"^^xsd:string .
+
+ns1:Producto_interno_10 a ns1:Producto_interno ;
+    ns1:Marca "MEKEET"^^xsd:string ;
+    ns1:Nombre "Cepillo y soporte para inodoro de silicona"^^xsd:string ;
+    ns1:Peso 381 ;
+    ns1:Precio "14.99"^^xsd:float ;
+    ns1:Tipo "hogar"^^xsd:string .
+
+ns1:Producto_interno_11 a ns1:Producto_interno ;
+    ns1:Marca "LEVIVO"^^xsd:string ;
+    ns1:Nombre "Juego de utensilios de cocina"^^xsd:string ;
+    ns1:Peso 299 ;
+    ns1:Precio "32.43"^^xsd:float ;
+    ns1:Tipo "hogar"^^xsd:string .
+
+ns1:Producto_interno_12 a ns1:Producto_interno ;
+    ns1:Marca "SONGMICS"^^xsd:string ;
+    ns1:Nombre "Silla giratoria de Oficina"^^xsd:string ;
+    ns1:Peso 19000 ;
+    ns1:Precio "105.22"^^xsd:float ;
+    ns1:Tipo "hogar"^^xsd:string .
+
+ns1:Producto_interno_13 a ns1:Producto_interno ;
+    ns1:Marca "nalgene"^^xsd:string ;
+    ns1:Nombre "Cantimplora de Agua"^^xsd:string ;
+    ns1:Peso 136 ;
+    ns1:Precio "8.59"^^xsd:float ;
+    ns1:Tipo "hogar"^^xsd:string .
+
+ns1:Producto_interno_14 a ns1:Producto_interno ;
+    ns1:Marca "FAIRY"^^xsd:string ;
+    ns1:Nombre "Pastillas lavavajillas original limÃ³n, 125 cÃ¡psulas"^^xsd:string ;
+    ns1:Peso 1970 ;
+    ns1:Precio "15.95"^^xsd:float ;
+    ns1:Tipo "hogar"^^xsd:string .
+
+ns1:Producto_interno_15 a ns1:Producto_interno ;
+    ns1:Marca "Scottex"^^xsd:string ;
+    ns1:Nombre "Scottex Original Papel HigiÃ©nico"^^xsd:string ;
+    ns1:Peso 700 ;
+    ns1:Precio "20.99"^^xsd:float ;
+    ns1:Tipo "hogar"^^xsd:string .
+
+ns1:Producto_interno_16 a ns1:Producto_interno ;
+    ns1:Marca "Microsoft"^^xsd:string ;
+    ns1:Nombre "Microsoft Xbox One S All Digital"^^xsd:string ;
+    ns1:Peso 2900 ;
+    ns1:Precio "236.0"^^xsd:float ;
     ns1:Tipo "tecnologia"^^xsd:string .
 
 ns1:Producto_interno_2 a ns1:Producto_interno ;
@@ -54,7 +111,7 @@ ns1:Producto_interno_8 a ns1:Producto_interno ;
     ns1:Marca "Logitech"^^xsd:string ;
     ns1:Nombre "Logitech HD Webcam C270"^^xsd:string ;
     ns1:Peso 30 ;
-    ns1:Precio "75"^^xsd:float ;
+    ns1:Precio "75.0"^^xsd:float ;
     ns1:Tipo "tecnologia"^^xsd:string .
 
 ns1:Producto_interno_9 a ns1:Producto_interno ;
@@ -64,51 +121,7 @@ ns1:Producto_interno_9 a ns1:Producto_interno ;
     ns1:Precio "59.99"^^xsd:float ;
     ns1:Tipo "tecnologia"^^xsd:string .
 
-ns1:Producto_interno_10 a ns1:Producto_interno ;
-    ns1:Marca "MEKEET"^^xsd:string ;
-    ns1:Nombre "Cepillo y soporte para inodoro de silicona"^^xsd:string ;
-    ns1:Peso 381 ;
-    ns1:Precio "14.99"^^xsd:float ;
-    ns1:Tipo "hogar"^^xsd:string .
+ns1:Vendedor_externo1 a ns1:Vendedor_externo ;
+    ns1:Forma_pago "VisaRayban"^^xsd:string ;
+    ns1:Nombre "Rayban"^^xsd:string .
 
-ns1:Producto_interno_11 a ns1:Producto_interno ;
-    ns1:Marca "LEVIVO"^^xsd:string ;
-    ns1:Nombre "Juego de utensilios de cocina"^^xsd:string ;
-    ns1:Peso 299 ;
-    ns1:Precio "32.43"^^xsd:float ;
-    ns1:Tipo "hogar"^^xsd:string .
-
-ns1:Producto_interno_12 a ns1:Producto_interno ;
-    ns1:Marca "SONGMICS"^^xsd:string ;
-    ns1:Nombre "Silla giratoria de Oficina"^^xsd:string ;
-    ns1:Peso 19000 ;
-    ns1:Precio "105.22"^^xsd:float ;
-    ns1:Tipo "hogar"^^xsd:string .    
-
-ns1:Producto_interno_13 a ns1:Producto_interno ;
-    ns1:Marca "nalgene"^^xsd:string ;
-    ns1:Nombre "Cantimplora de Agua"^^xsd:string ;
-    ns1:Peso 136 ;
-    ns1:Precio "8.59"^^xsd:float ;
-    ns1:Tipo "hogar"^^xsd:string . 
-
-ns1:Producto_interno_14 a ns1:Producto_interno ;
-    ns1:Marca "FAIRY"^^xsd:string ;
-    ns1:Nombre "Pastillas lavavajillas original limón, 125 cápsulas"^^xsd:string ;
-    ns1:Peso 1970 ;
-    ns1:Precio "15.95"^^xsd:float ;
-    ns1:Tipo "hogar"^^xsd:string . 
-
-ns1:Producto_interno_15 a ns1:Producto_interno ;
-    ns1:Marca "Scottex"^^xsd:string ;
-    ns1:Nombre "Scottex Original Papel Higiénico"^^xsd:string ;
-    ns1:Peso 700 ;
-    ns1:Precio "20.99"^^xsd:float ;
-    ns1:Tipo "hogar"^^xsd:string . 
-
-ns1:Producto_interno_16 a ns1:Producto_interno ;
-    ns1:Marca "Microsoft"^^xsd:string ;
-    ns1:Nombre "Microsoft Xbox One S All Digital"^^xsd:string ;
-    ns1:Peso 2900 ;
-    ns1:Precio "236"^^xsd:float ;
-    ns1:Tipo "tecnologia"^^xsd:string .
